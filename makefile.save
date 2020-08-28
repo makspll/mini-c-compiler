@@ -1,0 +1,6 @@
+build: mvn package -Dmaven.test.skip=true; 
+run: 
+	jar_name=SHELL := /bin/bash
+	build; mkdir -p bin; cd mcc/target; cp $(') ../bin  
+
+test: mvn test;
