@@ -28,7 +28,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-             <mainClass>co.uk.maksmozolewski.App</mainClass>
+             <mainClass>co.uk.maksmozolewski.Main</mainClass>
             </manifest>
           </archive>
         </configuration>

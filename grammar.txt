@@ -14,8 +14,8 @@ include    ::= "#include" STRING_LITERAL
 
 structdecl ::= structtype "{" (vardecl)+ "}" ";"    # structure declaration
 
-vardecl    ::= type IDENT ";"                       # normal declaration, e.g. int a;
-             | type IDENT "[" INT_LITERAL "]" ";"   # array declaration, e.g. int a[2];
+vardecl    ::= type IDENT (";" |                    # normal declaration, e.g. int a or
+                          "[" INT_LITERAL "]" ";")  # array declaration, e.g. int a[2]
 
 fundecl    ::= type IDENT "(" params ")" block    # function declaration
 
@@ -28,8 +28,8 @@ stmt       ::= block
              | "while" "(" exp ")" stmt              # while loop
              | "if" "(" exp ")" stmt ["else" stmt]   # if then else
              | "return" [exp] ";"                    # return
-             | exp "=" exp ";"                      # assignment
-             | exp ";"                               # expression statement, e.g. a function call
+             | exp ("=" exp ";"     # assignment
+                    | ";")      # expression statement, e.g. a function call  
 
 block      ::= "{" (vardecl)* (stmt)* "}"
 
