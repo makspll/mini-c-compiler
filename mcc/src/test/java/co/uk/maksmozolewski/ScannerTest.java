@@ -1,6 +1,6 @@
 package co.uk.maksmozolewski;
 
-import co.uk.maksmozolewski.Scanner;
+import co.uk.maksmozolewski.lexer.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -37,15 +37,28 @@ public class ScannerTest{
     public void testNext()
     {
         char currentChar;
+        int line = 1;
+        int col = 0;
         try {
             for(int i = 0; i < testFile.length(); i++){
 
                 if( i == testFile.length()){
                     assertThrows(EOFException.class, ()->{testScanner.next();});
                 } else {
+
                     currentChar = testScanner.next();
                     char rightChar = testFile.charAt(i);
+
+                    if(rightChar == '\n'){
+                        line ++;
+                        col = 0;
+                    } else {
+                        col ++;
+                    }
+
                     assertEquals(rightChar,currentChar);
+                    assertEquals(line,testScanner.getLine());
+                    assertEquals(col, testScanner.getColumn());
                 }
                 
             }

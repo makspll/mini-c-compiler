@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski;
+package co.uk.maksmozolewski.lexer;
 
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -29,6 +29,8 @@ public class Scanner {
      * @return
      */
     public char next() throws IOException{
+
+        // if we peeked before, return the peeked char
         Boolean havePeeked = peekedVal != -1;
         
         char nextChar;
@@ -41,6 +43,15 @@ public class Scanner {
                 throw new EOFException();
             }
             nextChar = (char)nextVal;
+        }
+
+        //advance line and column numbers,
+        // \n should work for counting lines on both Unix and non-Unix systems
+        if (nextChar == '\n') {
+            line++;
+            column =0;
+        } else {
+            column++;
         }
 
         return nextChar;

@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski;
+package co.uk.maksmozolewski.gen;
 
 public class CodeGenerator {
     
