@@ -34,6 +34,7 @@ public class Scanner {
         char nextChar;
         if (havePeeked){
             nextChar = (char)peekedVal;
+            peekedVal = -1;
         } else {
             int nextVal = input.read();
             if(nextVal == -1){
@@ -41,7 +42,7 @@ public class Scanner {
             }
             nextChar = (char)nextVal;
         }
-        
+
         return nextChar;
     }
 
@@ -62,6 +63,7 @@ public class Scanner {
                 throw new EOFException();
             }
             peekedChar = (char) readVal;
+            peekedVal = readVal;
         }
 
         return peekedChar;
