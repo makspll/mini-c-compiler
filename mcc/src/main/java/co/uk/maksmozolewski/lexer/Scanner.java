@@ -28,7 +28,7 @@ public class Scanner {
      * Returns the next character in the file
      * @return
      */
-    public char next() throws IOException{
+    public char next() throws IOException,EOFException{
 
         // if we peeked before, return the peeked char
         Boolean havePeeked = peekedVal != -1;

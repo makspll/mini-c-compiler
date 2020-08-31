@@ -34,7 +34,7 @@ stmt       ::= block
 block      ::= "{" (vardecl)* (stmt)* "}"
 
 exp        ::= "(" exp ")"
-             | (IDENT | INT_LITERAL)
+             | (IDENT |  )
              | "-" exp
              | CHAR_LITERAL
              | STRING_LITERAL

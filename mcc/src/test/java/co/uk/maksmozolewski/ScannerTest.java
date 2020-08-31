@@ -98,4 +98,5 @@ public class ScannerTest{
             testScanner.next();
         });
     }
+
 }
