@@ -29,7 +29,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
 
 
     @Test
-    public void testStringLiteral() throws FileNotFoundException,IOException {
+    public void testSTRING_LITERAL() throws FileNotFoundException,IOException {
         String data = "\"i\'m a string,420, \t,\b \n \r \f \0 \"";
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.STRING_LITERAL,data,1,0),
@@ -39,7 +39,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
     }
 
     @Test
-    public void testIntLiteral() throws FileNotFoundException, IOException {
+    public void testINT_LITERAL() throws FileNotFoundException, IOException {
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.INT_LITERAL, "1234567890",1,0),
             new Token(TokenClass.EOF,null, 1,10)
@@ -47,7 +47,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
     }
 
     @Test
-    public void testCharLiteral() throws FileNotFoundException, IOException{
+    public void testCHAR_LITERAL() throws FileNotFoundException, IOException{
         String data = "\'c\'";
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.CHAR_LITERAL,data, 1, 0),
@@ -64,7 +64,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
     }
 
     @Test
-    public void testTYPEINT() throws FileNotFoundException, IOException {
+    public void testINT() throws FileNotFoundException, IOException {
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.INT,null,1,0),
             new Token(TokenClass.EOF,null,1,3)
@@ -73,7 +73,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
 
 
     @Test
-    public void testTYPEVOID() throws FileNotFoundException, IOException {
+    public void testVOID() throws FileNotFoundException, IOException {
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.VOID,null,1,0),
             new Token(TokenClass.EOF,null,1,4)
@@ -81,7 +81,7 @@ public class SimpleTokeniserTest extends TokeniserTest {
     }
 
     @Test
-    public void testTYPECHAR() throws FileNotFoundException, IOException {
+    public void testCHAR() throws FileNotFoundException, IOException {
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.CHAR,null,1,0),
             new Token(TokenClass.EOF,null,1,4)
