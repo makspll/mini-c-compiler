@@ -1,5 +1,1 @@
-#include "hello"
-
-if("asd" == "asd"){
-    return 1;
-}
+// asdasdasd 

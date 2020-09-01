@@ -4,16 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+
 import java.util.ArrayList;
 
-import co.uk.maksmozolewski.gen.CodeGenerator;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
-import co.uk.maksmozolewski.parser.Parser;
 
 /**
  * The Main file implies an interface for the subsequent components, e.g. * The
@@ -59,9 +56,11 @@ public class Main {
 
         ArrayList<Token> tokens = new ArrayList<Token>();
 
-        for(Token t = tokeniser.nextToken(); t.tokenClass != TokenClass.EOF; t = tokeniser.nextToken()){
+        Token t;
+        do{
+            t = tokeniser.nextToken();
             tokens.add(t);
-        }
+        } while (t.tokenClass != TokenClass.EOF);
 
 
         FileWriter tokenizerOutFileWriter = new FileWriter(outputFile);

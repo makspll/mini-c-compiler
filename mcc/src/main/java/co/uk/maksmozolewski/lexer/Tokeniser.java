@@ -4,13 +4,10 @@ import co.uk.maksmozolewski.lexer.Token.TokenClass;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
 import java.util.function.Function;
 
 import static java.util.Map.entry;
@@ -39,11 +36,17 @@ public class Tokeniser {
         return this.error;
     }
 
-    public Tokeniser(final Scanner scanner) {
+    public Tokeniser(final Scanner scanner) throws EOFException, IOException {
         this.scanner = scanner;
+        //load up first character from the scanner
+        currChar = scanner.next();
     }
 
 
+    /**
+     * returns the next token in the stream.
+     * @return
+     */
     public Token nextToken() {
         
         clearTokenString();
@@ -62,6 +65,10 @@ public class Tokeniser {
         }
         //always pop in between tokens to avoid stupid errors
         popCurrentTokenString();
+
+        if(!clearedFirstToken)
+            clearedFirstToken = true;
+        
         return result;
     }
 
@@ -73,6 +80,156 @@ public class Tokeniser {
 
     private boolean reachedEOF = false;
     
+    private boolean clearedFirstToken = false;
+    
+
+    /** holds the characters belonging to the current token */
+    private final StringBuilder tokenStringSoFar = new StringBuilder();
+
+
+    private Token next() throws IOException {
+
+        final int line = scanner.getLine();
+        final int column = scanner.getColumn() - 1; // the scanner tells us that the current character is x chars in, we report that character's postition as x - 1
+
+        // skip white spaces
+        if (Character.isWhitespace(currChar)){
+            currChar = scanner.next();
+            return next();
+        }
+
+        try {
+            
+            // tokens identifiable by first character
+            switch(currChar){
+                case '#':
+                    expectFullString("#include");
+                    return new Token(TokenClass.INCLUDE,popCurrentTokenString(),line,column);
+                case '"':
+                    expectStringLiteral();
+                    return new Token(TokenClass.STRING_LITERAL,popCurrentTokenString(),line,column);
+                case '\'':
+                    expectCharLiteral();
+                    return new Token(TokenClass.CHAR_LITERAL,popCurrentTokenString(),line,column);
+            }
+
+            // operators
+            if(isOperatorStartChar(currChar)){
+                switch(currChar){
+                    case '&':
+                        expectFullString("&&");
+                        return new Token(TokenClass.AND,popCurrentTokenString(),line,column);
+                    case '|':
+                        expectFullString("||");
+                        return new Token(TokenClass.OR,popCurrentTokenString(),line,column);
+                    case '+':
+                        expectSingleChar('+');
+                        return new Token(TokenClass.PLUS,popCurrentTokenString(),line,column);
+                    case '-':
+                        expectSingleChar('-');
+                        return new Token(TokenClass.MINUS,popCurrentTokenString(),line,column);
+                    case '*':
+                        expectSingleChar('*');
+                        return new Token(TokenClass.ASTERIX,popCurrentTokenString(),line,column);
+                    case '/':
+                        Match rightMatch = expectLongestMatch(new ArrayList<Match>(Arrays.asList(
+                            new Match("/",TokenClass.DIV),
+                            new Match((s)->isACommentSoFar(s),null)
+                        )), "expected division or comment");
+
+                        if(rightMatch.getTokenClass() == null){
+                            // it's a comment, skip the whole token
+                            popCurrentTokenString();
+                            return nextToken();
+                        } else {
+                            // it's division
+                            return new Token(TokenClass.DIV,popCurrentTokenString(),line,column);
+                        }
+                    case '%':
+                        expectSingleChar('%');
+                        return new Token(TokenClass.REM,popCurrentTokenString(),line,column);
+                    case '.':
+                        expectSingleChar('.');
+                        return new Token(TokenClass.DOT,popCurrentTokenString(),line,column);
+                    case '!':
+                        expectFullString("!=");
+                        return new Token(TokenClass.NE,popCurrentTokenString(),line,column);
+                    case '=':
+                        int matched = expectEither("=", "==");
+                        if(matched == 0){
+                            return new Token(TokenClass.ASSIGN,popCurrentTokenString(),line,column);
+                        } else {
+                            return new Token(TokenClass.EQ,popCurrentTokenString(),line,column);
+                        }
+                    case '<':
+                        matched = expectEither("<","<=");
+                        if(matched == 0){
+                            return new Token(TokenClass.LT,popCurrentTokenString(),line,column);
+                        } else {
+                            return new Token(TokenClass.LE,popCurrentTokenString(),line,column);
+                        }
+                    case '>':
+                        matched = expectEither(">",">=");
+                        if(matched == 0){
+                            return new Token(TokenClass.GT,popCurrentTokenString(),line,column);
+                        } else {
+                            return new Token(TokenClass.GE,popCurrentTokenString(),line,column);
+                        }
+                    
+                }
+            }
+
+            // delimeters
+            if(isDelimeter(currChar)){
+                expectDelimeter();
+                String data = popCurrentTokenString();
+                return new Token(getDelimeterTokenClass((data).charAt(0)),data,line,column);
+            }
+
+            // int literals
+            if (Character.isDigit(currChar)){
+                expectIntLiteral();
+                return new Token(TokenClass.INT_LITERAL,popCurrentTokenString(),line,column);
+            }
+
+            // Identifiers or keywords, last since everything else is disjoint from this set
+            if(isIdentifierStartChar(currChar)){
+                final Match rightMatch = expectLongestMatch(new ArrayList<Match>(
+                    Arrays.asList(
+                    new Match("if",TokenClass.IF),
+                    new Match("else", TokenClass.ELSE),
+                    new Match("while",TokenClass.WHILE),
+                    new Match("return",TokenClass.RETURN),
+                    new Match("struct", TokenClass.STRUCT),
+                    new Match("sizeof",TokenClass.SIZEOF),
+                    new Match("int",TokenClass.INT),
+                    new Match("void",TokenClass.VOID),
+                    new Match("char",TokenClass.CHAR),
+                    new Match((s)->isValidIdentifier(s),TokenClass.IDENTIFIER))
+                )
+                , "Identifier or keyword");
+
+                return rightMatch.buildToken(popCurrentTokenString(), line, column);
+            }
+
+        } catch(EOFException e){
+            // next token will throw EOF at call to next(), meaning we get INVALID EOF at the end of the token list
+            error("Unexpected EOF in the middle of token",line,column);
+            return new Token(TokenClass.INVALID,popCurrentTokenString(), line, column);
+        }
+        catch (UnrecognizedCharacterException e) {
+            error(e,line,column);
+            return new Token(TokenClass.INVALID,popCurrentTokenString(),line,column);
+        } 
+        
+
+
+        // if we reach this point, it means we did not recognise a valid token
+        currChar = scanner.next();
+        error(currChar, line, column);
+        return new Token(TokenClass.INVALID,popCurrentTokenString(), line, column);
+    }
+
     /**
      * mechanism for working with multiple possible matches
      */
@@ -95,16 +252,9 @@ public class Tokeniser {
             this.funcMatch = match;
             this.tokenClass = matchTokenClass;
         }
-        private boolean checkMatch(final char c){
-            if(funcMatch == null){
-                if(currPosition > match.length() - 1){
-                    return false;
-                } else {
-                    return match.charAt(currPosition) == c;
-                }
-            } else {
-                return funcMatch.apply(tokenStringSoFar.toString() + c);
-            }
+        
+        public TokenClass getTokenClass(){
+            return tokenClass;
         }
 
    
@@ -125,6 +275,18 @@ public class Tokeniser {
 
         public Token buildToken(final String data,final int line,final int col){
             return new Token(tokenClass,data,line,col);
+        }
+
+        private boolean checkMatch(final char c){
+            if(funcMatch == null){
+                if(currPosition > match.length() - 1){
+                    return false;
+                } else {
+                    return match.charAt(currPosition) == c;
+                }
+            } else {
+                return funcMatch.apply(tokenStringSoFar.toString() + c);
+            }
         }
 
     }
@@ -184,6 +346,14 @@ public class Tokeniser {
         return keywords.contains(s);
     }
 
+    private TokenClass getDelimeterTokenClass(final char c){
+        assert(delimeterToTokenClassMap.containsKey(c));
+        return delimeterToTokenClassMap.get(c);
+    }
+    private char getEscapeCharacterForEnding(final char c){
+        return escapeEndingToEscapeCharacterMap.get(c);
+    }
+
     /**
      * 
      * @param string
@@ -206,10 +376,7 @@ public class Tokeniser {
     private boolean isDelimeter(final char c){
         return delimeters.contains(c);
     }
-    private TokenClass getDelimeterTokenClass(final char c){
-        assert(delimeterToTokenClassMap.containsKey(c));
-        return delimeterToTokenClassMap.get(c);
-    }
+
 
     private boolean isOperatorStartChar(final char c){
         return operatorStartChars.contains(c);
@@ -229,14 +396,44 @@ public class Tokeniser {
         return escapeSequenceEndings.contains((Character)c);
     }
 
-    private char getEscapeCharacterForEnding(final char c){
-        return escapeEndingToEscapeCharacterMap.get(c);
+
+ 
+
+    /**
+     * 
+     * @return true if the given string either is a comment, or has the valid starting characters to possibly be a comment
+     */
+    private boolean isACommentSoFar(String s){
+        // is it a comment
+        if(s.charAt(0) != '/') return false;
+        if(s.length() > 1){
+            boolean multiLineComment = s.charAt(1) == '*';
+            boolean singleLineComment = s.charAt(1) == '/';
+            
+            if(!multiLineComment && !singleLineComment) return false;
+            
+            if(multiLineComment){
+                // if the end of comment exists and is not the last thing in the string
+                int idxOfEndComment = s.indexOf("*/", 1);
+                if(idxOfEndComment != -1 && idxOfEndComment != s.length() - 2){
+                    return false;
+                } 
+
+            } else{
+                int idxOfEndLine = s.indexOf('\n', 1);
+                // if line break exists and is not the last thing in the string
+                if(idxOfEndLine != -1 && idxOfEndLine != s.length() - 1){
+                    return false;
+                }
+            }
+
+        }
+
+        // if we have something of the form "/" or "//" or "//asd" or "/* asdasd" we accept it as a comment
+        // however things like "/* asdasd */ a" will be rejected
+        return true;
+
     }
-
-    /** holds the characters belonging to the current token */
-    private final StringBuilder tokenStringSoFar = new StringBuilder();
-
-
 
     private void error(final char c, final int line, final int col) {
         System.out.println("Lexing error: unrecognised character ("+c+") at "+line+":"+col);
@@ -253,139 +450,6 @@ public class Tokeniser {
         error++;
     }
 
-    private Token next() throws IOException {
-
-        final int line = scanner.getLine();
-        final int column = scanner.getColumn();
-
-        // get the next character
-        currChar = scanner.next();
-        
-        // skip white spaces
-        if (Character.isWhitespace(currChar))
-            return next();
-
-        try {
-            
-            // tokens identifiable by first character
-            switch(currChar){
-                case '#':
-                    expectFullString("#include");
-                    return new Token(TokenClass.INCLUDE,popCurrentTokenString(),line,column);
-                case '"':
-                    expectStringLiteral();
-                    return new Token(TokenClass.STRING_LITERAL,popCurrentTokenString(),line,column);
-                case '\'':
-                    expectCharLiteral();
-                    return new Token(TokenClass.CHAR_LITERAL,popCurrentTokenString(),line,column);
-            }
-
-            // operators
-            if(isOperatorStartChar(currChar)){
-                switch(currChar){
-                    case '&':
-                        expectFullString("&&");
-                        return new Token(TokenClass.AND,popCurrentTokenString(),line,column);
-                    case '|':
-                        expectFullString("||");
-                        return new Token(TokenClass.OR,popCurrentTokenString(),line,column);
-                    case '+':
-                        expectSingleChar('+');
-                        return new Token(TokenClass.PLUS,popCurrentTokenString(),line,column);
-                    case '-':
-                        expectSingleChar('-');
-                        return new Token(TokenClass.MINUS,popCurrentTokenString(),line,column);
-                    case '*':
-                        expectSingleChar('*');
-                        return new Token(TokenClass.ASTERIX,popCurrentTokenString(),line,column);
-                    case '/':
-                        expectSingleChar('/');
-                        return new Token(TokenClass.DIV,popCurrentTokenString(),line,column);
-                    case '%':
-                        expectSingleChar('%');
-                        return new Token(TokenClass.REM,popCurrentTokenString(),line,column);
-                    case '.':
-                        expectSingleChar('.');
-                        return new Token(TokenClass.DOT,popCurrentTokenString(),line,column);
-                    case '!':
-                        expectFullString("!=");
-                        return new Token(TokenClass.NE,popCurrentTokenString(),line,column);
-                    case '=':
-                        int matched = expectEither("=", "==");
-                        if(matched == 0){
-                            return new Token(TokenClass.ASSIGN,popCurrentTokenString(),line,column);
-                        } else {
-                            return new Token(TokenClass.EQ,popCurrentTokenString(),line,column);
-                        }
-                    case '<':
-                        matched = expectEither("<","<=");
-                        if(matched == 0){
-                            return new Token(TokenClass.LT,popCurrentTokenString(),line,column);
-                        } else {
-                            return new Token(TokenClass.LE,popCurrentTokenString(),line,column);
-                        }
-                    case '>':
-                        matched = expectEither(">",">=");
-                        if(matched == 0){
-                            return new Token(TokenClass.GT,popCurrentTokenString(),line,column);
-                        } else {
-                            return new Token(TokenClass.GE,popCurrentTokenString(),line,column);
-                        }
-                    
-                }
-            }
-
-            // delimeters
-            if(isDelimeter(currChar)){
-                expectDelimeter();
-                String data = popCurrentTokenString();
-                return new Token(getDelimeterTokenClass((data).charAt(0)),data,line,column);
-            }
-
-            
-
-            // int literals
-            if (Character.isDigit(currChar)){
-                expectIntLiteral();
-                return new Token(TokenClass.INT_LITERAL,popCurrentTokenString(),line,column);
-            }
-
-            // Identifiers or keywords
-            if(isIdentifierStartChar(currChar)){
-                final Match rightMatch = expectLongestMatch(new ArrayList<Match>(
-                    Arrays.asList(
-                    new Match("if",TokenClass.IF),
-                    new Match("else", TokenClass.ELSE),
-                    new Match("while",TokenClass.WHILE),
-                    new Match("return",TokenClass.RETURN),
-                    new Match("struct", TokenClass.STRUCT),
-                    new Match("sizeof",TokenClass.SIZEOF),
-                    new Match("int",TokenClass.INT),
-                    new Match("void",TokenClass.VOID),
-                    new Match("char",TokenClass.CHAR),
-                    new Match((s)->isValidIdentifier(s),TokenClass.IDENTIFIER))
-                )
-                , "Identifier or keyword");
-
-                return rightMatch.buildToken(popCurrentTokenString(), line, column);
-            }
-
-        } catch(EOFException e){
-            // next token will throw EOF at call to next(), meaning we get INVALID EOF at the end of the token list
-            error("Unexpected EOF in the middle of token",line,column);
-            return new Token(TokenClass.INVALID,popCurrentTokenString(), line, column);
-        }
-        catch (UnrecognizedCharacterException e) {
-            error(e,line,column);
-            return new Token(TokenClass.INVALID,popCurrentTokenString(),line,column);
-        } 
-        
-
-
-        // if we reach this point, it means we did not recognise a valid token
-        error(currChar, line, column);
-        return new Token(TokenClass.INVALID,popCurrentTokenString(), line, column);
-    }
 
     private void queueChar(final char symbol){
         tokenStringSoFar.append(symbol);
@@ -519,8 +583,6 @@ public class Tokeniser {
                 else 
                     throw new UnrecognizedCharacterException("characters for: " + t1 +" or " + t2, currChar);
             } else {
-                final boolean hasSecondChar1 = t1.length() > 1;
-                final boolean hasSecondChar2 = t2.length() > 1;
 
                 // give priority to longest match under 2 chars
                 final boolean t1MatchesSecondChar = t1.length() > 1 ? t1.charAt(1) == currChar : false;
@@ -594,24 +656,6 @@ public class Tokeniser {
         acceptChar(c);
     }
 
-
-
-    /**
-     * accepts: ('a'|...|'z'|'A'|...|'Z'|'_')('0'|...|'9'|'a'|...|'z'|'A'|...|'Z'|'_')*
-     * @throws UnrecognizedCharacterException
-     * @throws EOFException
-     * @throws IOException
-     */
-    private void expectIdentifier() throws UnrecognizedCharacterException, EOFException, IOException {
-        if (!isIdentifierStartChar(currChar))
-            throw new UnrecognizedCharacterException("Character from the set: [a-zA-Z_]", currChar);
-        else
-            acceptChar(currChar);
-
-        while(isIdentifierInsideChar(currChar)){
-            acceptChar(currChar);
-        }
-    }
     
     /**
      * accepts: '{','}','(',')','[',']',';',','
