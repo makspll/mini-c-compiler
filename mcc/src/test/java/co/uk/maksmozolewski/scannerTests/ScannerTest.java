@@ -1,12 +1,9 @@
-package co.uk.maksmozolewski;
+package co.uk.maksmozolewski.scannerTests;
 
 import co.uk.maksmozolewski.lexer.Scanner;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.EOFException;

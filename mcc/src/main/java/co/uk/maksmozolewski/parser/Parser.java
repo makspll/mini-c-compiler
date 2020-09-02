@@ -20,7 +20,6 @@ public class Parser {
 
     public void parse(){
 
-        parseProgram();
     }
 
     public int getErrorCount(){

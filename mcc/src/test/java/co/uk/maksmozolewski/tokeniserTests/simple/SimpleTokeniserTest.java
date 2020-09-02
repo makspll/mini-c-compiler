@@ -18,9 +18,9 @@ import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
-import co.uk.maksmozolewski.tokeniserTests.TokeniserTest;
+import co.uk.maksmozolewski.CompilerTest;
 
-public class SimpleTokeniserTest extends TokeniserTest {
+public class SimpleTokeniserTest extends CompilerTest {
     
     private Scanner testScanner;
     private String testFile = new String(

@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski.tokeniserTests;
+package co.uk.maksmozolewski;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,15 +11,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
-import co.uk.maksmozolewski.lexer.Token.TokenClass;
 
-public class TokeniserTest {
+public class CompilerTest {
 
     protected Tokeniser testTokeniser;
     protected Scanner testScanner;

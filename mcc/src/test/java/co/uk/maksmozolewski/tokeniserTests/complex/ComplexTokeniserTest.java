@@ -1,6 +1,6 @@
 package co.uk.maksmozolewski.tokeniserTests.complex;
 
-import co.uk.maksmozolewski.tokeniserTests.TokeniserTest;
+import co.uk.maksmozolewski.CompilerTest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
 
-public class ComplexTokeniserTest extends TokeniserTest {
+public class ComplexTokeniserTest extends CompilerTest {
     
         
     @Test
