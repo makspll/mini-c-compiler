@@ -16,11 +16,14 @@ import org.junit.jupiter.api.io.TempDir;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
+import co.uk.maksmozolewski.parser.Parser;
 
 public class CompilerTest {
 
     protected Tokeniser testTokeniser;
     protected Scanner testScanner;
+    protected Parser testParser;
+
     protected Path tempFile;
 
     @BeforeEach
@@ -33,6 +36,11 @@ public class CompilerTest {
         Files.writeString(tempFile,fileContent);
         testScanner = new Scanner(tempFile.toFile());
         testTokeniser = new Tokeniser(testScanner);
+    }
+
+    protected void setupParser(String fileContent) throws FileNotFoundException, IOException {
+        setupTokenizer(fileContent);
+        testParser = new Parser(testTokeniser);
     }
 
     protected void assertTokenEquals(String message,Token expected, Token result){
@@ -57,6 +65,13 @@ public class CompilerTest {
 
     }
 
+    protected void assertNoParserErrors(){
+        assertEquals(0,testParser.getErrorCount(),"Expected 0 errors");
+    }
+
+    protected void assertParserErrorsCount(int count){
+        assertEquals(count, testParser.getErrorCount(),"Expected "+ count + " errors");
+    }
 
 
 }

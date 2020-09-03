@@ -1,22 +1,13 @@
 package co.uk.maksmozolewski.tokeniserTests.simple;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
-import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
 import co.uk.maksmozolewski.CompilerTest;
 
