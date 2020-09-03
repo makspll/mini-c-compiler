@@ -584,30 +584,43 @@ public class Tokeniser {
                     throw new UnrecognizedCharacterException("characters for: " + t1 +" or " + t2, currChar);
             } else {
 
-                // give priority to longest match under 2 chars
+                // give priority to longest match
                 final boolean t1MatchesSecondChar = t1.length() > 1 ? t1.charAt(1) == currChar : false;
                 final boolean t2MatchesSecondChar = t2.length() > 1 ? t2.charAt(1) == currChar : false;
-                // first prioritize by length
-                if(t1.length() >= t2.length() && t1MatchesSecondChar){
+                if(t1MatchesSecondChar && t2MatchesSecondChar){
+                    // prioritize by length first then by order (t1 first)
+                    if(t1.length() >= t2.length()){
+                        expectFullString(t1.substring(1, t1.length()));
+                        return 0;
+                    }
+                    else if(t2.length() >= t1.length()){
+                        expectFullString(t2.substring(1, t2.length()));
+                        return 1;
+                    } else {
+                        assert false;
+                        // shouldnt be reached
+                        return -1;
+                    }
+                   
+                } else if (t1MatchesSecondChar){
                     expectFullString(t1.substring(1, t1.length()));
                     return 0;
-                }
-                else if(t2.length() >= t1.length() && t2MatchesSecondChar){
+                } else if (t2MatchesSecondChar){
                     expectFullString(t2.substring(1, t2.length()));
                     return 1;
+                } else {
+                    // if none of them match second character, 
+                    // give it to t1 if it has only on char, or if it doesnt to t2 if it only has one char
+                    if(t1.length() == 1){
+                        return 0;
+                    } else if(t2.length() == 1){
+                        return 1;
+                    } else {
+                        throw new UnrecognizedCharacterException(t1.charAt(0) +" or " + t2.charAt(0), currChar);
+                    }
                 }
-                // then prioritize t1
-                else if(t1MatchesSecondChar){
-                    expectFullString(t1.substring(1, t1.length()));
-                    return 0;
-                }
-                else if (t2MatchesSecondChar){
-                    expectFullString(t2.substring(1, t2.length()));
-                    return 1;
-                }
-                else{
-                    throw new UnrecognizedCharacterException("characters for: " + t1 +" or " + t2 , currChar);
-                }
+ 
+                
             }
         }
         else if( t1.charAt(0) == currChar){
