@@ -12,32 +12,29 @@ include    ::= "#include" STRING_LITERAL
 
 structdecl ::= structtype "{" (vardecl)+ "}" ";"    # structure declaration
 
-vardecl    ::= type IDENT ";"                       # normal declaration, e.g. int a;
-             | type IDENT "[" INT_LITERAL "]" ";"   # array declaration, e.g. int a[2];
+vardecl    ::= type IDENT (";" |                       # normal declaration, e.g. int a;
+                            "[" INT_LITERAL "]" ";")   # array declaration, e.g. int a[2];
 
 fundecl    ::= type IDENT "(" params ")" block    # function declaration
 
 type       ::= ("int" | "char" | "void" | structtype) ["*"]
 structtype ::= "struct" IDENT
 
-params     ::= [ type IDENT ("," type IDENT)* ]
+params     ::= [ type IDENT paramsRec ]
+paramsRec  ::= ("," type IDENT)*
 
 stmt       ::= block
              | "while" "(" exp ")" stmt              # while loop
              | "if" "(" exp ")" stmt ["else" stmt]   # if then else
              | "return" [exp] ";"                    # return
-             | exp "=" exp ";"                      # assignment
-             | exp ";"                               # expression statement, e.g. a function call
+             | exp ("=" exp ";"             # assignment
+                    | ";")                   # expression statement, e.g. a function call        
 
 block      ::= "{" (vardecl)* (stmt)* "}"
 
 
 
-exp        ::= binaryop
-
-binaryop  ::= unaryop binaryop'
-binaryop' ::= unaryop 
-              | or eps
+exp        ::= or
 
 or    ::= and or'
 or'   ::= "||" and or'
@@ -60,21 +57,20 @@ summative   ::= multi summative'
 summative'  ::= ("+"|"-") multi summative'
           | eps
 
-multi    ::= sizeof multi'
-multi'   ::= ("*"|"/"|"%") sizeof multi'
+multi    ::= unarysecondary multi'
+multi'   ::= ("*"|"/"|"%") unarysecondary multi'
                           | eps
 
 unarysecondary  ::= unaryprimary
-                    | "sizeof" "(" type ")" unarysecondary  # size of type
-                    | "*" valueat unarysecondary            # pointer indirection
-                    | "(" type ")" typecast unarysecondary  # typecast
-                    | "-" unarysecondary                    # negation
+                    | sizeof
+                    | valueat    
+                    | typecast  
+                    | negation                
 
 unaryprimary    ::= terminalexpr unaryprimary'
-unaryprimary'   ::=  
-                    | IDENT "(" [ exp ("," exp)* ] ")"  # function call
-                    | "[" exp "]"                       # array access
-                    | "." IDENT                         # field access
+unaryprimary'   ::=  funcall 
+                    | arrayaccess                   
+                    | fieldaccess                       
                     | eps
 
 terminalexpr ::= "(" exp ")"
@@ -83,3 +79,13 @@ terminalexpr ::= "(" exp ")"
               | CHAR_LITERAL
               | STRING_LITERAL
               | funcall
+
+funcall      ::= IDENT "(" [exp funcallargs] ")"
+funcallargs  ::= ("," exp)*
+
+arrayaccess  ::= "[" exp "]"                  # array access
+fieldaccess  ::= "." IDENT                    # structure field member access
+valueat      ::= "*" exp                          # Value at operator (pointer indirection)
+sizeof       ::= "sizeof" "(" type ")"            # size of type
+typecast     ::= "(" type ")"  exp                 # type casting
+negation     ::= "-" exp
