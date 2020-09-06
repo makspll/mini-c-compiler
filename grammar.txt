@@ -37,9 +37,8 @@ block      ::= "{" (vardecl)* (stmt)* "}"
 exp        ::= or
 
 or    ::= and or'
-or'   ::= "||" and or'
-          | eps 
-          
+or'   ::= ["||" and or']
+
 
 and   ::= releq and'
 and'  ::= "&&" releq and' 
@@ -67,24 +66,22 @@ unarysecondary  ::= unaryprimary
                     | typecast  
                     | negation                
 
-unaryprimary    ::= terminalexpr unaryprimary'
-unaryprimary'   ::=  funcall 
-                    | arrayaccess                   
-                    | fieldaccess                       
-                    | eps
+unaryprimary    ::=  arrayaccess 
+                     | fieldaccess 
+                     | funcall
+                     | terminalexpr
 
 terminalexpr ::= "(" exp ")"
               | IDENT 
               | INT_LITERAL
               | CHAR_LITERAL
               | STRING_LITERAL
-              | funcall
 
 funcall      ::= IDENT "(" [exp funcallargs] ")"
 funcallargs  ::= ("," exp)*
 
-arrayaccess  ::= "[" exp "]"                  # array access
-fieldaccess  ::= "." IDENT                    # structure field member access
+arrayaccess  ::= terminalexpr "[" exp "]"                  # array access
+fieldaccess  ::= terminalexpr "." IDENT                    # structure field member access
 valueat      ::= "*" exp                          # Value at operator (pointer indirection)
 sizeof       ::= "sizeof" "(" type ")"            # size of type
 typecast     ::= "(" type ")"  exp                 # type casting
