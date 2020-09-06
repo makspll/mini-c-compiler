@@ -6,6 +6,8 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 import co.uk.maksmozolewski.CompilerTest;
+import co.uk.maksmozolewski.ast.BinOp;
+import co.uk.maksmozolewski.ast.Program;
 
 public class ComplexParserTest extends CompilerTest {
     
@@ -19,9 +21,13 @@ public class ComplexParserTest extends CompilerTest {
             "   return 0;" + "\n}"
         );
 
-        testParser.parse();
+        Program program = testParser.parse();
         assertNoParserErrors();
+        assertASTPrint(program, 
+        "Program(FunDecl(BaseType(INT),main,Block(ExprStmt(FunCallExpr(printf,StrLiteral(Hello, World! \n))),Return(IntLiteral(0)))))");
+        
     }
+
 
     @Test
     public void testLongExpressions() throws FileNotFoundException, IOException {
@@ -31,6 +37,10 @@ public class ComplexParserTest extends CompilerTest {
             "   hello = (2 + 2) * 4 % 5 / 2 - 1 + func();" + "\n"+
             "   return 0;" + "\n}"
         );
+        Program program = testParser.parse();
+        assertNoParserErrors();
+        assertASTPrint(program, 
+        "Program(FunDecl(BaseType(INT),main,Block(ExprStmt(FunCallExpr(printf,StrLiteral(Hello, World! \n))),Return(IntLiteral(0)))))");
     }
 
 }

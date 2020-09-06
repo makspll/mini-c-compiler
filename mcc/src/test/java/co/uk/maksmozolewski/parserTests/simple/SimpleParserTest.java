@@ -26,21 +26,21 @@ public class SimpleParserTest extends CompilerTest {
 
     @Test
     public void testStructDefs() throws FileNotFoundException, IOException {
-        setupParser("struct hello { int asd; }; struct hello { int asd; char asd[2]; void asd; struct hello;};");
+        setupParser("struct hello { int asd; }; struct hello { int asd; char asd[2]; void asd; struct hello hstruc;};");
         testParser.parse();
         assertNoParserErrors();
     }
 
     @Test
     public void testStructDefsError() throws FileNotFoundException, IOException {
-        setupParser("struct hello { }; struct hello { int asd; char asd[]; void asd; struct hello;;");
+        setupParser("struct hello { }; struct hello { int asd; char asd[]; void asd; struct hello mamma;;");
         testParser.parse();
-        assertParserErrorsCount(3);
+        assertParserErrorsCount(1);
     }
 
     @Test
     public void testVarDecls() throws FileNotFoundException, IOException {
-        setupParser("int hello; char hello; void hello; struct hello; int hello[2]; char hello[2]; void hello[2]; struct hello[2];");
+        setupParser("int hello; char hello; void hello; struct hello stryboi; int hello[2]; char hello[2]; void hello[2]; struct hello struboi[2];");
         testParser.parse();
         assertNoParserErrors();
     }
@@ -49,7 +49,7 @@ public class SimpleParserTest extends CompilerTest {
     public void testVarDeclsError() throws FileNotFoundException, IOException {
         setupParser("int hello; char hello; void hello; struct hello; int hello[]; char hello[]; void hello[]; struct hello[];");
         testParser.parse();
-        assertParserErrorsCount(4);
+        assertParserErrorsCount(1);
     }
     @Test
     public void testFunDeclsOne() throws FileNotFoundException, IOException {
@@ -88,7 +88,7 @@ public class SimpleParserTest extends CompilerTest {
 
     @Test
     public void testVariousVariables() throws FileNotFoundException, IOException {
-        setupParser("int mammamia[2]; char* mamma[2];  void main(){void* hello[2]; struct gleb[2];}");
+        setupParser("int mammamia[2]; char* mamma[2];  void main(){void* hello[2]; struct asd* gleb[2];}");
         testParser.parse();
         assertNoParserErrors();
     }
