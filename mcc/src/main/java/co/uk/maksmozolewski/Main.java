@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import co.uk.maksmozolewski.ast.ASTDotPrinter;
+import co.uk.maksmozolewski.ast.Program;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
+import co.uk.maksmozolewski.parser.Parser;
 
 /**
  * The Main file implies an interface for the subsequent components, e.g. * The
@@ -53,23 +56,18 @@ public class Main {
         }
 
         Tokeniser tokeniser = new Tokeniser(scanner);
+        Parser parser = new Parser(tokeniser);
+        Program ast = parser.parse();
 
-        ArrayList<Token> tokens = new ArrayList<Token>();
+        PrintWriter writer = new PrintWriter(outputFile);
+        ASTDotPrinter dotPrinter = new ASTDotPrinter(writer);
+        ast.accept(dotPrinter);
 
-        Token t;
-        do{
-            t = tokeniser.nextToken();
-            tokens.add(t);
-        } while (t.tokenClass != TokenClass.EOF);
-
-
-        FileWriter tokenizerOutFileWriter = new FileWriter(outputFile);
-        for (Token token : tokens) {
-            tokenizerOutFileWriter.write(token.toString() + " ");
-        }
-
-        tokenizerOutFileWriter.close();
+        writer.close();
         
-        System.out.println("Done with: " + tokeniser.getErrorCount() + " errors.");     
+        Runtime rt = Runtime.getRuntime();
+        Process pr = rt.exec("dot -Tpng out.txt -o program.png");
+        
+        System.out.println("Done with: " + (tokeniser.getErrorCount() + parser.getErrorCount()) + " errors.");     
     }
 }
