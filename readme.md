@@ -17,6 +17,7 @@ To build:
 `make build`
 To run tests:
 `make test`
-
 To run jar after build:
-`make run`
+`make run ARGS=""`
+To watch an input file and recompile on change:
+`make watch ARGS=""`
