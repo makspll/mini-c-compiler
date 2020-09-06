@@ -360,6 +360,7 @@ public class Tokeniser {
      * @return true if the given string is a valid Identifier string
      */
     private boolean isValidIdentifier(final String string){
+        //TODO: make sure that keywords within identifiers dont get flagged as keywords
         assert(string.length() != 0);
 
         if(!isIdentifierStartChar(string.charAt(0))) return false;
@@ -525,15 +526,44 @@ public class Tokeniser {
             UnrecognizedCharacterException {
         // keep filtering through the matches untill we have only one or none matches left
         int maxLoops = 100;
+        Match firstMatchFromLastRound = null;
+        boolean firstMatchPicked = false;
+        boolean foundMatchThisRound = false;
         do{
             for (final Match match : possibleMatches) {
+                
                 match.progressChar(currChar);
+                if(match.isMatching()){
+                    foundMatchThisRound = true;
+                    if(!firstMatchPicked){
+                        firstMatchFromLastRound = match;
+                        firstMatchPicked = true;
+                    }
+ 
+                }
             }
 
-            //get rid of non-matches
-            possibleMatches.removeIf((m)-> !m.isMatching());
+            // if we have no matches, pick the first match from last round
+            if(!foundMatchThisRound){
+                if(firstMatchFromLastRound != null){
+                    final Match fm = firstMatchFromLastRound; // clone to lambda scope
+
+                    // remove all except the match
+                    possibleMatches.removeIf((m)-> m != fm);
+                } else {
+                    throw new UnrecognizedCharacterException(expectErrorMessage, currChar);
+                }
+            } else {
+                //get rid of non-matches
+                possibleMatches.removeIf((m)-> !m.isMatching());
+            }
+
             // advance scanner
             acceptChar(currChar);
+
+            // reset round
+            firstMatchPicked = false;
+            foundMatchThisRound = false;
             
         } while(possibleMatches.size() > 1 && !reachedEOF && maxLoops-- > 0);
         
