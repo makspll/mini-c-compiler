@@ -28,13 +28,23 @@ public class ASTDotPrinter implements ASTVisitor<String> {
     private void writeChildrenGraphs(String parentID,String...childrenIDS){
         for (String childID : childrenIDS) {
             writer.write('\t');
-            writer.write(parentID);
+            writer.write(parentID == null ? "null" : parentID);
             writer.write("->");
-            writer.write(childID);
+            writer.write(childID == null ?"null" :childID);
             writer.write(";\n");
         }
     }
 
+    private void writeSubtrees(String parentID,List<? extends ASTNode>...lists){
+        
+        for (List<? extends ASTNode> list : lists) {
+            String[] nodeIds = new String[list.size()];
+            for (int i = 0; i < nodeIds.length; i++) {
+                nodeIds[i] =  list.get(i) == null ?"null" : list.get(i).accept(this);
+            }
+            writeChildrenGraphs(parentID, nodeIds);
+        }
+    }
 
     @Override
     public String visitBaseType(BaseType bt) {
@@ -109,40 +119,18 @@ public class ASTDotPrinter implements ASTVisitor<String> {
     public String visitBlock(Block b) {
         String nodeID = writeNodeLabel("Block", null);
 
-        String[] nodes = new String[b.varDecls.size() + b.stmnts.size()];
-        for (int i = 0; i < b.varDecls.size(); i++) {
-            nodes[i] = b.varDecls.get(i).accept(this);
-        }
-
-        for (int i = b.varDecls.size(); i < b.stmnts.size(); i++) {
-            nodes[i] = b.stmnts.get(i).accept(this);
-        }
-
-        writeChildrenGraphs(nodeID,nodes);
+        writeSubtrees(nodeID, b.varDecls,b.stmnts);
         return nodeID;
 
     }
+
+
 
     @Override
     public String visitProgram(Program p) {
         writer.write("digraph program{\n");
         String nodeID = writeNodeLabel("Program", null);
-
-        String[] nodes = new String[p.structTypeDecls.size() + p.varDecls.size() + p.funDecls.size()];
-        for (int i = 0; i < p.structTypeDecls.size(); i++) {
-            nodes[i] = p.structTypeDecls.get(i).accept(this);    
-        }
-
-        for (int i = p.structTypeDecls.size(); i < p.varDecls.size(); i++) {
-            nodes[i] = p.varDecls.get(i).accept(this);    
-        }
-
-        for (int i = p.varDecls.size(); i < p.funDecls.size(); i++) {
-            nodes[i] = p.funDecls.get(i).accept(this);    
-        }
-
-        writeChildrenGraphs(nodeID, nodes);
-
+        writeSubtrees(nodeID, p.structTypeDecls,p.varDecls,p.funDecls);
         writer.write("}");
         writer.flush();
         return nodeID;
