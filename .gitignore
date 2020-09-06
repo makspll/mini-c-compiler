@@ -43,3 +43,6 @@ buildNumber.properties
 
 # general
 *.swp
+test.txt
+out.txt
+*.png
