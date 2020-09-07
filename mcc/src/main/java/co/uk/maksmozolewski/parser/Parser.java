@@ -575,7 +575,7 @@ public class Parser {
         // if we dont find a bin op sign, we just return lhs, this is ok
         if(!accept(opTokens)) return lhs;
         nextToken();
-        
+
         Expr rhs;
         // we then parse the prefix to the next op as the rhs to this bin op, for left associativity of all bin operators
         if((rhs = prefixExpr.get()) == null){
@@ -675,26 +675,28 @@ public class Parser {
         // slightly different than in the actual grammar, but effect is the same
         // let each parse handle the LHS terminal expr just to avoid passing params \~(o.o)~/
 
-        switch (currToken.tokenClass){
-            case LSBR:
-                return parseArrayAccess();
-            case DOT:
-                return parseFieldAccess();
-            default:
-                // EXPR or FUNCALL
 
-                // it's an identifier it could be just IDENT from EXPR or FUNCALL
-                if(currToken.tokenClass == TokenClass.IDENTIFIER && 
-                    lookAhead(1).tokenClass == TokenClass.LPAR){
-                    // funcall
-                    return parseFunCall();
-                    
-                } else {
-                    // just a terminal expr or function call
-                    return parseTerminalExp();
-                }
+        // TERMINALEXPR or FUNCALL
+        Token nxtToken = lookAhead(1);
 
+        // it's an identifier it could be just IDENT from EXPR or FUNCALL
+        if(currToken.tokenClass == TokenClass.IDENTIFIER && 
+            nxtToken.tokenClass == TokenClass.LPAR){
+            // funcall
+            return parseFunCall();
         }
+        else if(nxtToken.tokenClass == TokenClass.DOT){
+            // fieldaccess
+            return parseFieldAccess();
+        }else if (nxtToken.tokenClass == TokenClass.LSBR){
+            //array access
+            return parseArrayAccess();
+        } else {
+            // just a terminal expr or function call
+            return parseTerminalExp();
+        }
+
+        
 
     }
 
@@ -761,14 +763,12 @@ public class Parser {
 
         Expr lhs;
         if((lhs = parseTerminalExp()) == null) return null;
-        expect(TokenClass.LSBR);
         
         expect(TokenClass.DOT);
 
         Token ident;
         if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
 
-        expect(TokenClass.RSBR);
 
         return new FieldAccessExpr(lhs, ident.data);
     }
