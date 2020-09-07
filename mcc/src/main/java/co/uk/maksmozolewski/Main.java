@@ -14,6 +14,7 @@ import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.lexer.Token.TokenClass;
 import co.uk.maksmozolewski.parser.Parser;
+import co.uk.maksmozolewski.sem.SemanticAnalyzer;
 
 /**
  * The Main file implies an interface for the subsequent components, e.g. * The
@@ -68,6 +69,8 @@ public class Main {
         Runtime rt = Runtime.getRuntime();
         Process pr = rt.exec("dot -Tpng out.txt -o program.png");
         
-        System.out.println("Done with: " + (tokeniser.getErrorCount() + parser.getErrorCount()) + " errors.");     
+        SemanticAnalyzer semAnalyser = new SemanticAnalyzer();
+        int semErrCount = semAnalyser.analyze(ast);
+        System.out.println("Done with: " + (tokeniser.getErrorCount() + parser.getErrorCount() + semErrCount) +" errors.");     
     }
 }
