@@ -17,7 +17,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import co.uk.maksmozolewski.ast.ASTNode;
 import co.uk.maksmozolewski.ast.ASTPrinter;
-import co.uk.maksmozolewski.ast.Program;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;

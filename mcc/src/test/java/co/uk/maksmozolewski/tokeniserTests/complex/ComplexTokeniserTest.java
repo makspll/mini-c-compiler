@@ -76,4 +76,13 @@ public class ComplexTokeniserTest extends CompilerTest {
         );
     }
 
+    @Test
+    public void testIdentifiers() throws FileNotFoundException, IOException {
+        assertTokenizerOutput(new Token[]{
+            new Token(TokenClass.INT,null,1,0),
+            new Token(TokenClass.IDENTIFIER,"i",1,4),
+            new Token(TokenClass.SC,null,1,5)
+        }, "int i;");
+    }
+
 }
