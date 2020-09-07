@@ -1,7 +1,7 @@
 package co.uk.maksmozolewski.ast;
 
 public class ChrLiteral extends Expr{
-    char val;
+    public char val;
 
     public ChrLiteral(char val){
         this.val = val;

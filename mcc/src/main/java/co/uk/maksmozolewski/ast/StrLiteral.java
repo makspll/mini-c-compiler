@@ -1,7 +1,7 @@
 package co.uk.maksmozolewski.ast;
 
 public class StrLiteral extends Expr{
-    String val;
+    public String val;
 
     public StrLiteral(String val){
         this.val = val;

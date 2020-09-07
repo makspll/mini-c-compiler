@@ -4,8 +4,8 @@ import co.uk.maksmozolewski.ast.Type;
 
 public class ArrayType implements Type{
 
-    Type innerType;
-    int size;
+    public Type innerType;
+    public int size;
 
     public ArrayType(Type innerType,int size){
         this.innerType = innerType;

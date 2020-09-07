@@ -2,9 +2,9 @@ package co.uk.maksmozolewski.ast;
 
 public class BinOp extends Expr{
 
-    Expr lhs;
-    Op op;
-    Expr rhs;
+    public Expr lhs;
+    public Op op;
+    public Expr rhs;
 
     public BinOp(Expr lhs, Op op, Expr rhs){
         this.lhs = lhs;

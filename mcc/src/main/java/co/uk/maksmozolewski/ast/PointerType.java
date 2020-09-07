@@ -2,7 +2,7 @@ package co.uk.maksmozolewski.ast;
 
 public class PointerType implements Type{
 
-    Type pointedToType;
+    public Type pointedToType;
     
     public PointerType(Type pointedToType){
         this.pointedToType = pointedToType;

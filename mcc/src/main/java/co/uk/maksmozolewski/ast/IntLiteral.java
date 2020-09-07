@@ -1,7 +1,7 @@
 package co.uk.maksmozolewski.ast;
 
 public class IntLiteral extends Expr{
-    int val;
+    public int val;
 
     public IntLiteral(int val){
         this.val = val;

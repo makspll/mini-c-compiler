@@ -4,8 +4,10 @@ import java.util.List;
 
 public class FunCallExpr extends Expr {
 
-    String funName;
-    List<Expr> args;
+    public String funName;
+    public List<Expr> args;
+
+    public FunDecl funDecl; // to be filled by name analysis;
 
     public FunCallExpr(String funName, List<Expr> args){
         this.funName = funName;

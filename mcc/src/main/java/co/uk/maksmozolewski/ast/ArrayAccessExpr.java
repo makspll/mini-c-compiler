@@ -2,8 +2,8 @@ package co.uk.maksmozolewski.ast;
 
 public class ArrayAccessExpr extends Expr{
 
-    final Expr array;
-    final Expr idx;
+    public final Expr array;
+    public final Expr idx;
 
     public ArrayAccessExpr(Expr array, Expr idx) {
         this.array = array;

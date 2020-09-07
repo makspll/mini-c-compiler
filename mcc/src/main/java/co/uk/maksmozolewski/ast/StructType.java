@@ -2,7 +2,7 @@ package co.uk.maksmozolewski.ast;
 
 public class StructType implements Type{
 
-    String structType;
+    public String structType;
     
     public StructType(String structType){
         this.structType = structType;
