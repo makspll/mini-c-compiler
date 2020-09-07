@@ -140,8 +140,6 @@ public class ASTDotPrinter implements ASTVisitor<String> {
     public String visitVarExpr(VarExpr v) {
         String nodeID = writeNodeLabel("VarExpr", v.name);
         
-        writeChildrenGraphs(nodeID, v.vd.accept(this));
-
         return nodeID;
     }
 
