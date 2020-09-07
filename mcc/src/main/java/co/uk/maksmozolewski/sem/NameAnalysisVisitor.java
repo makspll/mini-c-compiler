@@ -23,25 +23,73 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitBaseType(BaseType bt) {
-		// To be completed...
+
 		return null;
+	}
+
+	/**
+	 * creates new scope from current scope, sets current scope to it and after executing given function sets the scope back to the original
+	 * @param func
+	 * @return the new scope
+	 */
+	public Scope executeInNewScope(Runnable func){
+		Scope oldScope = currentScope;
+		Scope newScope = new BlockScope(oldScope);
+		currentScope = newScope;
+		func.run();
+		currentScope = oldScope;
+		return newScope;
 	}
 
 	@Override
 	public Void visitStructTypeDecl(StructTypeDecl sts) {
-		// To be completed...
+		// check struct identifier is unique in the block
+		// we still stay in the global scope untill we reach the structs varDecls
+
+		Symbol s = currentScope.lookup(sts.structType);
+		if(s == null){
+			// what we expect
+			currentScope.put(new StructTypeSymbol(sts));
+		} else {
+			// already defined 
+			error("Cannot declare struct type, Identifier " + sts.structType + " is already declared.");
+		} 
+
+		executeInNewScope(()->{
+			visitAll(sts.varDecls);
+		});
+		
 		return null;
 	}
 
 	@Override
 	public Void visitBlock(Block b) {
-		// To be completed...
+
+		executeInNewScope(()->{
+			visitAll(b.varDecls,b.stmnts);
+		});
+
 		return null;
 	}
 
 	@Override
 	public Void visitFunDecl(FunDecl p) {
-		// To be completed...
+
+		// check func is not declared already
+		Symbol s = currentScope.lookup(p.name);
+		if(s == null){
+			currentScope.put(new FuncSymbol(p));
+		} else {
+			error("Cannot declare function, Identifier " + p.name + " is already declared.");
+		}
+
+		executeInNewScope(()->{
+			p.funType.accept(this);
+			visitAll(p.params);
+			p.block.accept(this);
+		});
+
+
 		return null;
 	}
 
@@ -55,127 +103,186 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitVarDecl(VarDecl vd) {
-		// To be completed...
+		// check var is not declared already
+		// possibly shadow that declaration if it's in another scope
+		Symbol s = currentScope.lookup(vd.varName);
+		if(s == null){
+			currentScope.put(new VarSymbol(vd));
+		}else {
+
+			// check that it doesn't exist in the current scope
+			Symbol s2 = currentScope.lookupCurrent(vd.varName);
+			if(s2 == null){
+				// good to go with shadowing
+				currentScope.put(new VarSymbol(vd));
+			} else {
+				error("Cannot declare variable, Identifier " + vd.varName + " is already defined.");
+			}
+		}
+
 		return null;
 	}
 
 	@Override
 	public Void visitVarExpr(VarExpr v) {
-		// To be completed...
+		// check the var is declared, and that the declared symbol is a variable
+		Symbol s = currentScope.lookup(v.name);
+		if(s == null){
+			error("Variable was not declared: " + v.name);
+		} else if (!s.isVar()){
+			error("Variable declaration not found, Function or Struct already declared with identical Identifier: " + v.name + ".");
+		} else {
+			// set the declaration
+			v.vd = ((VarSymbol)s).vd;
+		}
+
 		return null;
 	}
 
 	@Override
 	public Void visitPointerType(PointerType pt) {
-		// TODO Auto-generated method stub
+		pt.pointedToType.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitStructType(StructType st) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitArrayType(ArrayType at) {
-		// TODO Auto-generated method stub
+		at.innerType.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitIntLiteral(IntLiteral il) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitStrLiteral(StrLiteral sl) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitChrLiteral(ChrLiteral cl) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitFunCallExpr(FunCallExpr fce) {
-		// TODO Auto-generated method stub
+		// check function is declared
+		Symbol s = currentScope.lookup(fce.funName);
+		if(s == null){
+			error("Function was not declared: " + fce.funName + ".");
+		} else if (!s.isFunc()){
+			error("Function was not declared: " + fce.funName + ", Another Struct or Variable declared with the same identifier.");
+		}
+		
+		executeInNewScope(()->{
+			visitAll(fce.args);
+		});
+
 		return null;
 	}
 
 	@Override
 	public Void visitBinOp(BinOp bo) {
-		// TODO Auto-generated method stub
+		bo.lhs.accept(this);
+		bo.op.accept(this);
+		bo.rhs.accept(this);
+
 		return null;
 	}
 
 	@Override
 	public Void visitOp(Op o) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Void visitArrayAccessExpr(ArrayAccessExpr aae) {
-		// TODO Auto-generated method stub
+		aae.array.accept(this);
+		aae.idx.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitFieldAccessExpr(FieldAccessExpr fae) {
-		// TODO Auto-generated method stub
+		fae.structure.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitValueAtExpr(ValueAtExpr vae) {
-		// TODO Auto-generated method stub
+		vae.ptr.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitSizeOfExpr(SizeOfExpr sizeOfExpr) {
-		// TODO Auto-generated method stub
+		sizeOfExpr.val.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitTypecastExpr(TypecastExpr typecastExpr) {
-		// TODO Auto-generated method stub
+		typecastExpr.newType.accept(this);
+		typecastExpr.newType.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitExprStmt(ExprStmt exprStmt) {
-		// TODO Auto-generated method stub
+		exprStmt.expr.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitWhile(While w) {
-		// TODO Auto-generated method stub
+		// condition is in the outer scope
+		w.condition.accept(this);
+		// stmt is in inner scope
+		executeInNewScope(()->{
+			w.stmt.accept(this);
+		});
+
 		return null;
 	}
 
 	@Override
 	public Void visitIf(If i) {
-		// TODO Auto-generated method stub
+		
+		// condition is in outer scope
+		i.condition.accept(this);
+		// rest is in brace scopes
+		executeInNewScope(()->{
+			i.ifStmt.accept(this);
+
+		});
+
+		// else
+		if(i.elseStmt != null)
+			executeInNewScope(()->{
+				i.elseStmt.accept(this);
+			});
+
 		return null;
 	}
 
 	@Override
 	public Void visitAssign(Assign a) {
-		// TODO Auto-generated method stub
+		a.lhs.accept(this);
+		a.rhs.accept(this);
 		return null;
 	}
 
 	@Override
 	public Void visitReturn(Return r) {
-		// TODO Auto-generated method stub
+		if(r.stmt != null)
+			r.stmt.accept(this);
 		return null;
 	}
 
