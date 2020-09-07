@@ -7,4 +7,8 @@ public abstract class Symbol {
 	public Symbol(String name) {
 		this.name = name;
 	}
+
+	public abstract boolean isVar();
+	public abstract boolean isFunc();
+	public abstract boolean isStruct();
 }
