@@ -257,7 +257,12 @@ public class Tokeniser {
             return tokenClass;
         }
 
-   
+        public boolean isWholeMatch(String string){
+            return funcMatch == null ?
+                    match.equals(string) :
+                    funcMatch.apply(string);
+        }
+        
         public boolean isMatching(){
             return isMatching;
         }
@@ -361,7 +366,7 @@ public class Tokeniser {
      */
     private boolean isValidIdentifier(final String string){
         //TODO: make sure that keywords within identifiers dont get flagged as keywords
-        assert(string.length() != 0);
+        if(string.length() == 0) return false;
 
         if(!isIdentifierStartChar(string.charAt(0))) return false;
 
@@ -406,6 +411,8 @@ public class Tokeniser {
      */
     private boolean isACommentSoFar(String s){
         // is it a comment
+        if(s.length() == 0) return false;
+
         if(s.charAt(0) != '/') return false;
         if(s.length() > 1){
             boolean multiLineComment = s.charAt(1) == '*';
@@ -529,13 +536,18 @@ public class Tokeniser {
         Match firstMatchFromLastRound = null;
         boolean firstMatchPicked = false;
         boolean foundMatchThisRound = false;
+
+        StringBuilder matchStringTestedSoFar = new StringBuilder();
         do{
+            matchStringTestedSoFar.append(currChar);
+
             for (final Match match : possibleMatches) {
                 
                 match.progressChar(currChar);
+                
                 if(match.isMatching()){
                     foundMatchThisRound = true;
-                    if(!firstMatchPicked){
+                    if(!firstMatchPicked && match.isWholeMatch(matchStringTestedSoFar.toString())){
                         firstMatchFromLastRound = match;
                         firstMatchPicked = true;
                     }
@@ -543,13 +555,16 @@ public class Tokeniser {
                 }
             }
 
-            // if we have no matches, pick the first match from last round
+            // if we have no matches, pick the first WHOLE match from last round
             if(!foundMatchThisRound){
                 if(firstMatchFromLastRound != null){
                     final Match fm = firstMatchFromLastRound; // clone to lambda scope
 
                     // remove all except the match
                     possibleMatches.removeIf((m)-> m != fm);
+
+                    // we will be one char ahead (because we progressed the scanner at the end of last round)
+                    break;
                 } else {
                     throw new UnrecognizedCharacterException(expectErrorMessage, currChar);
                 }
@@ -558,9 +573,8 @@ public class Tokeniser {
                 possibleMatches.removeIf((m)-> !m.isMatching());
             }
 
-            // advance scanner
+            // advance scanner if we have more rounds coming
             acceptChar(currChar);
-
             // reset round
             firstMatchPicked = false;
             foundMatchThisRound = false;
