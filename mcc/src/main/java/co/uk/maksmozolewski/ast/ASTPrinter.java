@@ -127,7 +127,7 @@ public class ASTPrinter implements ASTVisitor<Void> {
     @Override
     public Void visitStructType(StructType st) {
         writer.print("StructType(");
-        writer.print(st.structType);
+        writer.print(st.structTypeIdentifier);
         writer.print(")");
         return null;
     }

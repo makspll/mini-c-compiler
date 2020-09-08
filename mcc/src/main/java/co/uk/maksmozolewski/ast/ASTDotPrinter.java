@@ -61,7 +61,7 @@ public class ASTDotPrinter implements ASTVisitor<String> {
 
     @Override
     public String visitStructType(StructType st) {
-        String nodeID = writeNodeLabel("StructType", st.structType);
+        String nodeID = writeNodeLabel("StructType", st.structTypeIdentifier);
         return nodeID;
         
     }
@@ -78,13 +78,10 @@ public class ASTDotPrinter implements ASTVisitor<String> {
 
     @Override
     public String visitStructTypeDecl(StructTypeDecl st) {
-        String nodeID = writeNodeLabel("StructTypeDecl",st.structType);
+        String nodeID = writeNodeLabel("StructTypeDecl",null);
         
-        List<String> nodes = new LinkedList<String>();
-        for (VarDecl vd : st.varDecls) {
-            nodes.add(vd.accept(this));
-        }
-        writeChildrenGraphs(nodeID, nodes.toArray(new String[nodes.size()]));
+        writeChildrenGraphs(nodeID, st.structType.accept(this));
+        writeSubtrees(nodeID,st.varDecls);
 
         return nodeID;
     }
