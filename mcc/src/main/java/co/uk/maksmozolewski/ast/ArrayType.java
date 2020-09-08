@@ -16,5 +16,37 @@ public class ArrayType implements Type{
     public <T> T accept(ASTVisitor<T> v) {
         return v.visitArrayType(this);
     }
+
+    @Override
+    public boolean isStructTypeType() {
+        return false;
+    }
+
+    @Override
+    public boolean isArrayType() {
+        return true;
+    }
+
+    @Override
+    public boolean isPointerType() {
+        return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof ArrayType)) {
+            return false;
+        }
+        ArrayType arrayType = (ArrayType) o;
+        return arrayType.innerType.equals(innerType) && arrayType.size == size;
+    }
+
+    @Override
+    public int hashCode() {
+        return innerType.hashCode() + (size * Integer.MAX_VALUE);
+    }
+
     
 }
