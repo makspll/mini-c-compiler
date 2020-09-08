@@ -2,6 +2,7 @@ package co.uk.maksmozolewski.ast;
 
 public class Return extends Stmt{
 
+    public FunDecl fd; // to be filled in by name analyser
     public final Expr stmt;
 
 
