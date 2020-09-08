@@ -5,12 +5,12 @@ import java.util.List;
 public class StructTypeDecl implements ASTNode {
 
     /** the name of the type of struct declared */
-    public String structType;
+    public StructType structType;
 
     /** the variables declared within the struct  */
     public List<VarDecl> varDecls;
 
-    public StructTypeDecl(String structType, List<VarDecl> varDecls){
+    public StructTypeDecl(StructType structType, List<VarDecl> varDecls){
         this.structType = structType;
         this.varDecls = varDecls;
     }
