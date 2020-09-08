@@ -6,9 +6,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import co.uk.maksmozolewski.ast.ASTDotPrinter;
+import co.uk.maksmozolewski.ast.BaseType;
+import co.uk.maksmozolewski.ast.Block;
+import co.uk.maksmozolewski.ast.FunDecl;
+import co.uk.maksmozolewski.ast.PointerType;
 import co.uk.maksmozolewski.ast.Program;
+import co.uk.maksmozolewski.ast.Stmt;
+import co.uk.maksmozolewski.ast.VarDecl;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
@@ -62,10 +71,16 @@ public class Main {
 
         PrintWriter writer = new PrintWriter(outputFile);
         ASTDotPrinter dotPrinter = new ASTDotPrinter(writer);
-        ast.accept(dotPrinter);
+
+        try {
+            ast.accept(dotPrinter);
+        } catch (Exception e) {
+            
+        }
 
         writer.close();
         
+
         Runtime rt = Runtime.getRuntime();
         Process pr = rt.exec("dot -Tpng out.txt -o program.png");
         
