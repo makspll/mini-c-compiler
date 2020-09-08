@@ -3,20 +3,18 @@ package co.uk.maksmozolewski.sem;
 import java.util.HashMap;
 import java.util.Map;
 
-/** all things declared within a file */
-public class FileScope implements Scope {
-    GlobalScope gs;
-    private Map<String, Symbol> symbolTable;
+/** used to represent functions declared anywhere (stdlib is outside of the file) */
+public class GlobalScope implements Scope {
+	private Map<String, Symbol> symbolTable;
 
-    public FileScope(GlobalScope gs){
-        this.gs = gs;
+    public GlobalScope(){
         symbolTable = new HashMap<String,Symbol>();
     }
 
     @Override
     public Symbol lookup(String name) {
         Symbol symbol = symbolTable.get(name);
-        return symbol == null ? gs.lookup(name) : symbol;
+        return symbol;
     }
 
     @Override
