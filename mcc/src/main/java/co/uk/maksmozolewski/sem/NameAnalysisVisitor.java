@@ -1,5 +1,7 @@
 package co.uk.maksmozolewski.sem;
 
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import co.uk.maksmozolewski.ast.*;
@@ -7,19 +9,6 @@ import co.uk.maksmozolewski.ast.*;
 public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	int errCount;
 	Scope currentScope;
-
-	public void visitAll(List<? extends ASTNode>...subtrees){
-		for (List<? extends ASTNode> list : subtrees) {
-			for (ASTNode node : list) {
-				node.accept(this);
-			}
-		}
-	}
-
-	public void Error(String msg){
-		System.out.println("Name Analysis Error:" + msg);
-		errCount++;
-	}
 
 	@Override
 	public Void visitBaseType(BaseType bt) {
@@ -41,34 +30,93 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		return newScope;
 	}
 
+	
+
+
+	@Override
+	public Void visitProgram(Program p) {
+		GlobalScope gs = new GlobalScope();
+		currentScope = gs;
+        // supply library functions:
+        // void print_s(char* s);
+        // void print_i(int i);
+        // void print_c(char c);
+        // char read_c();
+        // int read_i();
+        // void* mcmalloc(int size);
+        
+
+		Block emptyBlock = new Block(new LinkedList<VarDecl>(),new LinkedList<Stmt>());
+		
+        List<FunDecl> stlib = new LinkedList<FunDecl>(Arrays.asList(
+            new FunDecl(BaseType.VOID, 
+                "print_s", 
+                new LinkedList<VarDecl>(Arrays.asList(
+                    new VarDecl(new PointerType(BaseType.CHAR), "s"))), 
+                emptyBlock
+            ),
+            new FunDecl(BaseType.VOID,
+                "print_i",
+                new LinkedList<VarDecl>(Arrays.asList(
+                    new VarDecl(BaseType.INT,"i"))
+                ),
+                emptyBlock
+            ),
+            new FunDecl(BaseType.VOID,
+                "print_c",
+                new LinkedList<VarDecl>(Arrays.asList(
+                    new VarDecl(BaseType.CHAR,"c")
+                )),
+                emptyBlock),
+            new FunDecl(BaseType.CHAR,
+                "read_c",
+                new LinkedList<VarDecl>(),
+                emptyBlock),
+            new FunDecl(BaseType.INT,
+                "read_i",
+                new LinkedList<VarDecl>(),
+                emptyBlock),
+            new FunDecl(new PointerType(BaseType.VOID),
+                "mcmalloc",
+                new LinkedList<VarDecl>(Arrays.asList(
+                    new VarDecl(BaseType.INT, "size")
+                    
+                )),
+                emptyBlock)
+		));
+	
+		// this will mean that 
+		visitAll(stlib);
+		currentScope = new FileScope(gs);
+
+	
+		visitAll(p.structTypeDecls,p.varDecls,p.funDecls);
+		return null;
+	}
 	@Override
 	public Void visitStructTypeDecl(StructTypeDecl sts) {
 		// check struct identifier is unique in the block
 		// we still stay in the global scope untill we reach the structs varDecls
 
-		Symbol s = currentScope.lookup(sts.structType);
+		Symbol s = currentScope.lookup(sts.structType.structTypeIdentifier);
 		if(s == null){
 			// what we expect
 			currentScope.put(new StructTypeSymbol(sts));
 		} else {
-			// already defined 
-			error("Cannot declare struct type, Identifier " + sts.structType + " is already declared.");
+			// check that it doesn't exist in the current scope
+			Symbol s2 = currentScope.lookupCurrent(sts.structType.structTypeIdentifier);
+			if(s2 == null){
+				// good to go with shadowing
+				currentScope.put(new StructTypeSymbol(sts));
+			} else {
+				error("Cannot declare struct type, Identifier " + sts.structType.structTypeIdentifier + " is already defined.");
+			}
 		} 
 
 		executeInNewScope(()->{
 			visitAll(sts.varDecls);
 		});
 		
-		return null;
-	}
-
-	@Override
-	public Void visitBlock(Block b) {
-
-		executeInNewScope(()->{
-			visitAll(b.varDecls,b.stmnts);
-		});
-
 		return null;
 	}
 
@@ -80,7 +128,14 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		if(s == null){
 			currentScope.put(new FuncSymbol(p));
 		} else {
-			error("Cannot declare function, Identifier " + p.name + " is already declared.");
+			// check that it doesn't exist in the current scope
+			Symbol s2 = currentScope.lookupCurrent(p.name);
+			if(s2 == null){
+				// good to go with shadowing
+				currentScope.put(new FuncSymbol(p));
+			} else {
+				error("Cannot declare function, Identifier " + p.name + " is already defined.");
+			}
 		}
 
 		executeInNewScope(()->{
@@ -89,15 +144,15 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 			p.block.accept(this);
 		});
 
+		// we look for return statement and assign its fd
+		// that's if one exists
+		for (Stmt stmt : p.block.stmnts) {
+			if(stmt instanceof Return){
+				((Return)stmt).fd = p;
+			}
+		}
 
-		return null;
-	}
 
-
-	@Override
-	public Void visitProgram(Program p) {
-		currentScope = new FileScope();
-		visitAll(p.structTypeDecls,p.varDecls,p.funDecls);
 		return null;
 	}
 
@@ -105,6 +160,10 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitVarDecl(VarDecl vd) {
 		// check var is not declared already
 		// possibly shadow that declaration if it's in another scope
+
+		// first check all good is with the type (say it's a struct, its type needs to have been declared)
+		vd.varType.accept(this);
+
 		Symbol s = currentScope.lookup(vd.varName);
 		if(s == null){
 			currentScope.put(new VarSymbol(vd));
@@ -129,12 +188,22 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 		Symbol s = currentScope.lookup(v.name);
 		if(s == null){
 			error("Variable was not declared: " + v.name);
-		} else if (!s.isVar()){
-			error("Variable declaration not found, Function or Struct already declared with identical Identifier: " + v.name + ".");
+		} else if (!(s.isVar())){
+			error("Variable declaration not found: " + v.name + ".");
 		} else {
 			// set the declaration
 			v.vd = ((VarSymbol)s).vd;
 		}
+
+		return null;
+	}
+
+	@Override
+	public Void visitBlock(Block b) {
+
+		executeInNewScope(()->{
+			visitAll(b.varDecls,b.stmnts);
+		});
 
 		return null;
 	}
@@ -147,6 +216,16 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitStructType(StructType st) {
+		// check struct type declaration exists;
+		Symbol s = currentScope.lookup(st.structTypeIdentifier);
+		if(s == null){
+			error("Struct type was not declared: " + s.name + ".");
+		} else if  (!s.isStruct()){
+			error("Struct type was not declared: " + s.name + ", The same identifier is used in another variable or function declaration.");
+		} else {
+			st.dec = ((StructTypeSymbol)s).std;
+		}
+		
 		return null;
 	}
 
@@ -179,6 +258,8 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 			error("Function was not declared: " + fce.funName + ".");
 		} else if (!s.isFunc()){
 			error("Function was not declared: " + fce.funName + ", Another Struct or Variable declared with the same identifier.");
+		} else {
+			fce.funDecl = ((FuncSymbol)s).fd;
 		}
 		
 		executeInNewScope(()->{
@@ -230,7 +311,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitTypecastExpr(TypecastExpr typecastExpr) {
 		typecastExpr.newType.accept(this);
-		typecastExpr.newType.accept(this);
+		typecastExpr.castedExpr.accept(this);
 		return null;
 	}
 
