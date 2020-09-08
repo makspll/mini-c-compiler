@@ -34,6 +34,7 @@ import co.uk.maksmozolewski.ast.Type;
 import co.uk.maksmozolewski.ast.TypecastExpr;
 import co.uk.maksmozolewski.ast.ValueAtExpr;
 import co.uk.maksmozolewski.ast.VarDecl;
+import co.uk.maksmozolewski.ast.VarExpr;
 import co.uk.maksmozolewski.ast.While;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
@@ -103,7 +104,7 @@ public class Parser {
         msg.append('.');
         
         errorCount++;
-        System.out.println(msg.toString());
+        System.err.println(msg.toString());
     }
 
     /**
@@ -192,7 +193,7 @@ public class Parser {
     }
 
     private boolean stmntFirstHasCurrToken(){
-        return terminalExpFirstHasCurrToken() ||
+        return expFirstHasCurrToken() ||
                accept(TokenClass.WHILE,
                     TokenClass.IF,
                     TokenClass.RETURN,
@@ -200,7 +201,7 @@ public class Parser {
     }
 
     private boolean expFirstHasCurrToken(){
-        return terminalExpFirstHasCurrToken();
+        return terminalExpFirstHasCurrToken() || accept(TokenClass.ASTERIX,TokenClass.SIZEOF,TokenClass.LPAR,TokenClass.MINUS);
     }
 
     private boolean terminalExpFirstHasCurrToken(){
@@ -253,7 +254,7 @@ public class Parser {
 
     private StructTypeDecl parseStructDecl(){
         // structtype 
-        String structType;
+        StructType structType;
         if((structType = parseStructType()) == null) return null;
 
         // "{"
@@ -269,14 +270,14 @@ public class Parser {
         return new StructTypeDecl(structType,varDecls);
     }
 
-    private String parseStructType(){
+    private StructType parseStructType(){
         // "struct" IDENT
         expect(TokenClass.STRUCT);
 
         Token ident;
         if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
 
-        return ident.data;
+        return new StructType(ident.data);
     }
 
 
@@ -707,7 +708,7 @@ public class Parser {
                 // IDENT
                 Token identifier = currToken;
                 nextToken();
-                return new StrLiteral(identifier.data);
+                return new VarExpr(identifier.data);
             case LPAR:
                 // "(" expr ")"
                 nextToken();
@@ -865,9 +866,9 @@ public class Parser {
             case STRUCT:
                 
                 // cannot create struct type without identifier
-                String structIdent;
-                if((structIdent = parseStructType()) == null) return null;
-                returnType = new StructType(structIdent);
+                StructType structType;
+                if((structType = parseStructType()) == null) return null;
+                returnType = structType;
                 break;
             default:
                 error(TokenClass.INT,TokenClass.CHAR,TokenClass.VOID,TokenClass.STRUCT);
