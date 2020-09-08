@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski.parserTests.complex;
+package co.uk.maksmozolewski.parserTests;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class ComplexParserTest extends CompilerTest {
         Program program = testParser.parse();
         assertNoParserErrors();
         assertASTPrint(program, 
-        "Program(FunDecl(BaseType(INT),main,Block(ExprStmt(FunCallExpr(printf,StrLiteral(Hello, World! \n))),Return(IntLiteral(0)))))");
+        "Program(FunDecl(BaseType(INT),main,Block(Assign(VarExpr(hello),BinOp(BinOp(BinOp(BinOp(BinOp(BinOp(IntLiteral(2),Op(ADD),IntLiteral(2)),Op(MUL),IntLiteral(4)),Op(MOD),IntLiteral(5)),Op(DIV),IntLiteral(2)),Op(SUB),IntLiteral(1)),Op(ADD),FunCallExpr(func))),Return(IntLiteral(0)))))");
     }
 
 }

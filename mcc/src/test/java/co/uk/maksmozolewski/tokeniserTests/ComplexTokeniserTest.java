@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski.tokeniserTests.complex;
+package co.uk.maksmozolewski.tokeniserTests;
 
 import co.uk.maksmozolewski.CompilerTest;
 

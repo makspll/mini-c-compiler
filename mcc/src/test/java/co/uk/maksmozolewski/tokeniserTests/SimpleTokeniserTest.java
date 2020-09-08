@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski.tokeniserTests.simple;
+package co.uk.maksmozolewski.tokeniserTests;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

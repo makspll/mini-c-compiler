@@ -17,10 +17,15 @@ import org.junit.jupiter.api.io.TempDir;
 
 import co.uk.maksmozolewski.ast.ASTNode;
 import co.uk.maksmozolewski.ast.ASTPrinter;
+import co.uk.maksmozolewski.ast.Program;
 import co.uk.maksmozolewski.lexer.Scanner;
 import co.uk.maksmozolewski.lexer.Token;
 import co.uk.maksmozolewski.lexer.Tokeniser;
 import co.uk.maksmozolewski.parser.Parser;
+import co.uk.maksmozolewski.sem.NameAnalysisVisitor;
+import co.uk.maksmozolewski.sem.SemanticAnalyzer;
+import co.uk.maksmozolewski.sem.TypeCheckVisitor;
+import co.uk.maksmozolewski.semanticAnalysisTests.TypeAnalysisTest;
 
 public class CompilerTest {
 
@@ -35,6 +40,10 @@ public class CompilerTest {
     protected ByteArrayOutputStream stream;
     protected ASTPrinter printer;
 
+    protected SemanticAnalyzer testAnalyser;
+    protected NameAnalysisVisitor nameAnalysis;
+    protected TypeCheckVisitor typeCheck;
+
     @BeforeEach
     public void setup(@TempDir Path tempDir) {
         // create temp file for testing
@@ -42,7 +51,10 @@ public class CompilerTest {
         stream = new ByteArrayOutputStream();
         testWriter = new PrintWriter(stream);
         printer = new ASTPrinter(testWriter);
+        testAnalyser = new SemanticAnalyzer();
 
+        typeCheck = new TypeCheckVisitor();
+        nameAnalysis = new NameAnalysisVisitor();
     }
 
     protected void assertStreamContentEquals(String content){
@@ -100,6 +112,25 @@ public class CompilerTest {
 
     protected void assertParserErrorsCount(int count){
         assertEquals(count, testParser.getErrorCount(),"Expected "+ count + " errors");
+    }
+
+    protected void assertProgramSemanticErrorCount(String program,int count) throws FileNotFoundException, IOException {
+        setupParser(program);
+        assertEquals(count,testAnalyser.analyze(testParser.parse()));
+    }
+
+    protected void assertProgramNameAnalysisErrorCount(String program, int count) throws FileNotFoundException, IOException {
+        setupParser(program);
+        testParser.parse().accept(nameAnalysis);
+        assertEquals(count,nameAnalysis.getErrorCount());
+    }
+
+    protected void assertProgramTypeAnalysisErrorCount(String program, int count) throws FileNotFoundException, IOException {
+        setupParser(program);
+        Program p = testParser.parse();
+        p.accept(nameAnalysis);
+        p.accept(typeCheck);
+        assertEquals(count,typeCheck.getErrorCount());
     }
 
 

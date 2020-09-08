@@ -1,4 +1,4 @@
-package co.uk.maksmozolewski.parserTests.simple;
+package co.uk.maksmozolewski.parserTests;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
