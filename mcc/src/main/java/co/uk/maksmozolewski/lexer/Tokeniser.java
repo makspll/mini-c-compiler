@@ -454,7 +454,7 @@ public class Tokeniser {
     }
 
     private void error(final String m, final int line, final int col){
-        System.out.println(m + " at "+":" + col);
+        System.err.println(m + " at "+":" + col);
         error++;
     }
 
