@@ -1,15 +1,26 @@
 package co.uk.maksmozolewski.sem;
 
+import java.util.List;
+
+import co.uk.maksmozolewski.ast.ASTNode;
 
 /**
  * 
- * @author dhil
- * A base class providing basic error accumulation.
+ * @author dhil A base class providing basic error accumulation.
  */
 public abstract class BaseSemanticVisitor<T> implements SemanticVisitor<T> {
 	private int errors;
 	
-	
+	protected void visitAll(List<? extends ASTNode>...subtrees){
+		for (List<? extends ASTNode> list : subtrees) {
+			for (ASTNode node : list) {
+				if(node != null){
+					node.accept(this);
+
+				}
+			}
+		}
+	}
 	public BaseSemanticVisitor() {
 		errors = 0;
 	}
