@@ -9,6 +9,7 @@ public class SemanticAnalyzer {
 		// List of visitors
 		ArrayList<SemanticVisitor> visitors = new ArrayList<SemanticVisitor>() {{
 			add(new NameAnalysisVisitor());
+			add(new TypeCheckVisitor());
 		}};
 		// Error accumulator
 		int errors = 0;
