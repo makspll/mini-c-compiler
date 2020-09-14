@@ -61,27 +61,33 @@ multi'   ::= ("*"|"/"|"%") unarysecondary multi'
                           | eps
 
 unarysecondary  ::= unaryprimary
-                    | sizeof
-                    | valueat    
-                    | typecast  
-                    | negation                
+                    | sizeof 
+                    | valueat   
+                    | typecast 
+                    | negation            
 
-unaryprimary    ::=  arrayaccess 
-                     | fieldaccess 
-                     | funcall
+unaryprimary    ::=  postexpr
                      | terminalexpr
+
+postexpr :: = terminalexpr postexpr'
+postexpr' :: = arrayaccess
+              | fieldaccess
+              | eps 
 
 terminalexpr ::= "(" exp ")"
               | IDENT 
               | INT_LITERAL
               | CHAR_LITERAL
               | STRING_LITERAL
+              | funcall
 
 funcall      ::= IDENT "(" [exp funcallargs] ")"
 funcallargs  ::= ("," exp)*
 
-arrayaccess  ::= terminalexpr "[" exp "]"                  # array access
-fieldaccess  ::= terminalexpr "." IDENT                    # structure field member access
+arrayaccess ::= "[" exp "]" postexpr'
+
+fieldaccess  ::= "." IDENT postexpr'
+
 valueat      ::= "*" exp                          # Value at operator (pointer indirection)
 sizeof       ::= "sizeof" "(" type ")"            # size of type
 typecast     ::= "(" type ")"  exp                 # type casting
