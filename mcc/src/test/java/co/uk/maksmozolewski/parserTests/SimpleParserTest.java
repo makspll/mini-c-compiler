@@ -92,4 +92,11 @@ public class SimpleParserTest extends CompilerTest {
         testParser.parse();
         assertNoParserErrors();
     }
+
+    @Test
+    public void test2DAccess() throws FileNotFoundException, IOException {
+        setupParser("void main(){gleb[2][2];*hleb.str[2][2];}");
+        testParser.parse();
+        assertNoParserErrors();
+    }
 }

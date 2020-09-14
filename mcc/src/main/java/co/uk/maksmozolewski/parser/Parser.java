@@ -680,35 +680,93 @@ public class Parser {
         // TERMINALEXPR or FUNCALL
         Token nxtToken = lookAhead(1);
 
-        // it's an identifier it could be just IDENT from EXPR or FUNCALL
-        if(currToken.tokenClass == TokenClass.IDENTIFIER && 
-            nxtToken.tokenClass == TokenClass.LPAR){
-            // funcall
-            return parseFunCall();
-        }
-        else if(nxtToken.tokenClass == TokenClass.DOT){
-            // fieldaccess
-            return parseFieldAccess();
-        }else if (nxtToken.tokenClass == TokenClass.LSBR){
-            //array access
-            return parseArrayAccess();
+
+        if(nxtToken.tokenClass == TokenClass.DOT || nxtToken.tokenClass == TokenClass.LSBR){
+            return parsePostExpr();
         } else {
             // just a terminal expr or function call
             return parseTerminalExp();
         }
 
+    }
+
+    private Expr parsePostExpr(){
+        Expr termexpr;
+        if((termexpr = parseTerminalExp()) == null) return null;
         
+        if(accept(TokenClass.DOT,TokenClass.LSBR)){
+            return parsePostExprRec(termexpr);
+        } else {
+            return termexpr;
+        }
 
     }
 
+    private Expr parsePostExprRec(Expr lhs){
+        if(accept(TokenClass.DOT)){
+            nextToken();
+            Token ident;
+            if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
 
+            Expr fieldAccess = new FieldAccessExpr(lhs, ident.data);
+            if(accept(TokenClass.DOT,TokenClass.LSBR)){
+                return parsePostExprRec(fieldAccess);
+            } else {
+                return fieldAccess;
+            }
+        } else if(accept(TokenClass.LSBR)){
+            nextToken();
+            Expr idx = parseExp();
+            expect(TokenClass.RSBR);
+
+            Expr arrayAccess = new ArrayAccessExpr(lhs, idx);
+            if(accept(TokenClass.DOT,TokenClass.LSBR)){
+                return parsePostExprRec(arrayAccess);
+            } else {
+                return arrayAccess;
+            }
+
+        } else {
+            return null;
+        }
+    }
+
+    // private Expr parseArrayAccess(){
+    //     expect(TokenClass.LSBR);
+        
+    //     Expr idx;
+    //     if((idx = parseExp())==null) return null;
+    //     expect(TokenClass.RSBR);
+
+    //     return new ArrayAccessExpr(lhs, idx);
+    // }
+
+
+    // private Expr parseFieldAccess(){
+    //     // terminalExpr "." IDENT
+
+    //     Expr lhs;
+    //     if((lhs = parseTerminalExp()) == null) return null;
+        
+    //     expect(TokenClass.DOT);
+
+    //     Token ident;
+    //     if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
+
+
+    //     return new FieldAccessExpr(lhs, ident.data);
+    // }
     private Expr parseTerminalExp(){
         switch(currToken.tokenClass){
             case IDENTIFIER:
-                // IDENT
-                Token identifier = currToken;
-                nextToken();
-                return new VarExpr(identifier.data);
+                // IDENT or funcall
+                if(lookAhead(1).tokenClass == TokenClass.LPAR){
+                    return parseFunCall();
+                } else {
+                    Token identifier = currToken;
+                    nextToken();
+                    return new VarExpr(identifier.data);
+                }
             case LPAR:
                 // "(" expr ")"
                 nextToken();
@@ -746,33 +804,7 @@ public class Parser {
         }
     }
 
-    private Expr parseArrayAccess(){
-        // terminalExpr "[" exp "]"
-        Expr lhs;
-        if((lhs = parseTerminalExp()) == null) return null;
-        expect(TokenClass.LSBR);
-        
-        Expr idx;
-        if((idx = parseExp())==null) return null;
-        expect(TokenClass.RSBR);
 
-        return new ArrayAccessExpr(lhs, idx);
-    }
-
-    private Expr parseFieldAccess(){
-        // terminalExpr "." IDENT
-
-        Expr lhs;
-        if((lhs = parseTerminalExp()) == null) return null;
-        
-        expect(TokenClass.DOT);
-
-        Token ident;
-        if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
-
-
-        return new FieldAccessExpr(lhs, ident.data);
-    }
 
     private Expr parseFunCall(){
         // IDENT "(" [exp funcallargs] ")"
