@@ -70,4 +70,10 @@ public class NameAnalysisTest extends CompilerTest {
     public void testStandardLibraryFuncsShadowingNoError() throws FileNotFoundException, IOException {
         assertProgramNameAnalysisErrorCount("void print_s(){} void print_i(){} void print_c(){} void read_c(){} void read_i(){} void mcmalloc(){}", 0);
     }
+
+
+    @Test
+    public void testRecursionDefinition() throws FileNotFoundException, IOException {
+        assertProgramNameAnalysisErrorCount("int rec(int a){if(a == 0){return 0;} else { return rec(a - 1);}}int main(){print_i(rec(10));}", 0);
+    }
 }
