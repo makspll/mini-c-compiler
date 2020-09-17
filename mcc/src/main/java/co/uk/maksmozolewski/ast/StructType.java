@@ -45,5 +45,17 @@ public class StructType implements Type{
         return structTypeIdentifier.hashCode() + (dec.hashCode() * Integer.MAX_VALUE);
     }
 
+    @Override
+    public int sizeOfType() {
+        // we treat each field as a word size apart from arrays, which we pad (but ArrayType.sizeof() will give you the padded size anyway)
+        int size = 0;
+        for (VarDecl var : dec.varDecls) {
+            size += var.varType.sizeOfType();
+        }
+        return size;
+    }
+
+    
+
 
 }

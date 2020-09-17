@@ -46,6 +46,11 @@ public class PointerType implements Type{
         return pointedToType.hashCode();
     }
 
+    @Override
+    public int sizeOfType() {
+        return 4;
+    }
+
 
 }
 

@@ -48,5 +48,11 @@ public class ArrayType implements Type{
         return innerType.hashCode() + (size * Integer.MAX_VALUE);
     }
 
+    @Override
+    public int sizeOfType() {
+        int compactSize = this.innerType.sizeOfType() * size;
+        return compactSize + (4 - (compactSize % 4));
+    }
+
     
 }
