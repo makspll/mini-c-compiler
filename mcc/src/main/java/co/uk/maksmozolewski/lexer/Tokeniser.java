@@ -533,68 +533,91 @@ public class Tokeniser {
             UnrecognizedCharacterException {
         // keep filtering through the matches untill we have only one or none matches left
         int maxLoops = 100;
-        Match firstMatchFromLastRound = null;
-        boolean firstMatchPicked = false;
-        boolean foundMatchThisRound = false;
-
-        StringBuilder matchStringTestedSoFar = new StringBuilder();
+        boolean foundMatch = false;
+        Match pickedMatch = null;
         do{
-            matchStringTestedSoFar.append(currChar);
+            // progress char always stays one behind the next character to be accepted
+            char currProgressChar = currChar;
 
-            for (final Match match : possibleMatches) {
-                
-                match.progressChar(currChar);
-                
-                if(match.isMatching()){
-                    foundMatchThisRound = true;
-                    if(!firstMatchPicked && match.isWholeMatch(matchStringTestedSoFar.toString())){
-                        firstMatchFromLastRound = match;
-                        firstMatchPicked = true;
+            // try out the curr char
+            Match firstMatch = null;
+            int matchesCount = 0;
+            for (Match match : possibleMatches) {
+                match.progressChar(currProgressChar);
+                if(match.isWholeMatch(tokenStringSoFar.toString() + currProgressChar)){
+                    if(firstMatch == null){
+                        firstMatch = match;
                     }
- 
+                    matchesCount++;
                 }
             }
 
-            // if we have no matches, pick the first WHOLE match from last round
-            if(!foundMatchThisRound){
-                if(firstMatchFromLastRound != null){
-                    final Match fm = firstMatchFromLastRound; // clone to lambda scope
+            Match firstMatchNext = null;
+            int matchesCountNext = 0;
 
-                    // remove all except the match
-                    possibleMatches.removeIf((m)-> m != fm);
+            // we do not progress the character unless there are actual matches, then we only peek
+            if(matchesCount > 0){
+                acceptChar(currChar);
+                currProgressChar = currChar;
 
-                    // we will be one char ahead (because we progressed the scanner at the end of last round)
-                    break;
-                } else {
-                    throw new UnrecognizedCharacterException(expectErrorMessage, currChar);
+                if(!reachedEOF) {
+                    // look at next char too
+
+                    for (Match match : possibleMatches) {
+                        match.progressChar(currProgressChar);
+                        if(match.isWholeMatch(tokenStringSoFar.toString() + currProgressChar)){
+                            if(firstMatchNext == null){
+                                firstMatchNext = match;
+                            }
+                            matchesCountNext++;
+                        }
+                    }
                 }
             } else {
-                //get rid of non-matches
-                possibleMatches.removeIf((m)-> !m.isMatching());
+                matchesCountNext = 0;
             }
 
-            // advance scanner if we have more rounds coming
-            acceptChar(currChar);
-            // reset round
-            firstMatchPicked = false;
-            foundMatchThisRound = false;
+            // don't progress the string unless there are more matches coming
+            if(matchesCountNext > 0)
+                acceptChar(currChar);
             
-        } while(possibleMatches.size() > 1 && !reachedEOF && maxLoops-- > 0);
-        
-        if(possibleMatches.size() == 0 )
-            throw new UnrecognizedCharacterException(expectErrorMessage, currChar);
 
-        Match finalMatch = possibleMatches.get(0);
+            // a match will be the longest and first one to be found
+
+            if(matchesCount == 0 && matchesCountNext == 0)
+                // if no matches yet, keep going, something has to match (or not :C, hence max loops)
+                continue;
+            else if(matchesCount > 0){
+                // if we found some matches in the current char
+                // check there's not something longer that matches
+                if(matchesCountNext > 0){
+                    // if we hit EOF, we use the longest match we found
+                    pickedMatch = firstMatchNext;
+                    continue;
+                } else {
+                    // we leave the loop with the only left over match
+                    pickedMatch = firstMatch;
+                    foundMatch = true;
+                }
+            } else {
+                // if no matches in the first round but picked up some in the next
+                // just keep going, need more info
+                continue;
+            }
+            
+        } while(!foundMatch && !reachedEOF && maxLoops-- > 0);
 
         maxLoops = 100;
-        while(finalMatch.isMatching() && !reachedEOF && maxLoops-- > 0){
-            finalMatch.progressChar(currChar);
-            if(finalMatch.isMatching()){
+        char currProgressChar = currChar;
+        while(pickedMatch.isWholeMatch(tokenStringSoFar.toString() + currProgressChar) && !reachedEOF && maxLoops-- > 0){
+            pickedMatch.progressChar(currChar);
+            // keep going with the longest match untill we either reach EOF or no longer matching or exceed the loop limit
+            if(pickedMatch.isMatching()){
                 acceptChar(currChar);
             }
         }
-
-        return finalMatch;
+        // this might return null in bad combinations of queries, we return the best thing we find essentially
+        return pickedMatch;
 
         }
 

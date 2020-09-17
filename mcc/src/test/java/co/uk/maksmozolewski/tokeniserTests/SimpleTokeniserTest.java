@@ -49,9 +49,9 @@ public class SimpleTokeniserTest extends CompilerTest {
     @Test
     public void testIDENTIFIER() throws FileNotFoundException, IOException {
         assertTokenizerOutput(new Token[]{
-            new Token(TokenClass.IDENTIFIER,"new_var_1234567_im_var",1,0),
-            new Token(TokenClass.EOF,null,1,22)
-        }, "new_var_1234567_im_var");
+            new Token(TokenClass.IDENTIFIER,"new_int_1234",1,0),
+            new Token(TokenClass.EOF,null,1,12)
+        }, "new_int_1234");
     }
 
     @Test

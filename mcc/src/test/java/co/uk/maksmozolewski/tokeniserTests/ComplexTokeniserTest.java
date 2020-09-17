@@ -81,8 +81,12 @@ public class ComplexTokeniserTest extends CompilerTest {
         assertTokenizerOutput(new Token[]{
             new Token(TokenClass.INT,null,1,0),
             new Token(TokenClass.IDENTIFIER,"i",1,4),
-            new Token(TokenClass.SC,null,1,5)
-        }, "int i;");
+            new Token(TokenClass.SC,null,1,5),
+            new Token(TokenClass.IDENTIFIER,"structy",1,6),
+            new Token(TokenClass.SC,null,1,13),
+            new Token(TokenClass.IDENTIFIER,"charr",1,14),
+
+        }, "int i;structy;charr");
     }
 
 }
