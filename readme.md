@@ -31,7 +31,10 @@ function declarations
 have a look at the example txt files with programs to see what I mean.
 
 To compile a file run: `make run IN="<inputfile>" OUT="<outputfile>"`
-and to run it in MARS run: `java -jar Mars4_5.jar`
+
+this will create the output file as well as an abstract syntax tree in png format (among other dump files) in the same directory
+
+To launch the program run it in MARS using: `java -jar Mars4_5.jar`
 which will open up the MARS GUI in which you can open and simulate the output file.
 
 ## notes

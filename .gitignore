@@ -40,8 +40,7 @@ buildNumber.properties
 # project
 /cw-src
 *.astdump
-out
-*.txt
+!Mars4_5.jar
 
 # general
 *.swp

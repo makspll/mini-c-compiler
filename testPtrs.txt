@@ -1,0 +1,19 @@
+
+void main(){
+    int nums[20];
+    int* numPtr;
+    int i;
+
+    numPtr = (int*)nums;
+
+    i = 0;
+    while(i < 20){
+        nums[i] = i;
+        print_i(nums[i]);
+        print_i(*numPtr);
+        numPtr = numPtr + 1;
+
+        i = i + 1;
+    }
+
+}

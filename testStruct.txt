@@ -1,0 +1,18 @@
+struct h {
+    char* string;
+};
+
+void main(){
+    int i;
+    struct h myboi;
+
+    i = 0;
+    myboi.string = (char*)mcmalloc(sizeof(char) * 10);
+
+    while(i < 10){
+        myboi.string[i] = 'a';
+        i = i + 1;
+    }
+
+    print_s(myboi.string);
+}

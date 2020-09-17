@@ -164,8 +164,7 @@ public class ASTDotPrinter implements ASTVisitor<String> {
     public String visitFunCallExpr(FunCallExpr fce) {
         String nodeID = writeNodeLabel("FunCallExpr", fce.funName);
 
-        writeChildrenGraphs(nodeID, fce.args.toArray(new String[fce.args.size()]));
-
+        writeSubtrees(nodeID, fce.args);
         return nodeID;
     }
 
