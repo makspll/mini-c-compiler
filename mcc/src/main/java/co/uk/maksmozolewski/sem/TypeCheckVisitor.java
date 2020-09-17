@@ -1,6 +1,11 @@
 package co.uk.maksmozolewski.sem;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import co.uk.maksmozolewski.Main;
 import co.uk.maksmozolewski.ast.*;
+import co.uk.maksmozolewski.gen.ReturnMatcher;
 
 public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
@@ -8,6 +13,11 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitProgram(Program p) {
+
+		// include stlib in type check (crude but it works)
+		List<FunDecl> funDecls = new LinkedList<FunDecl>(Main.stlib);
+		funDecls.addAll(p.funDecls);
+		
 		visitAll(p.structTypeDecls,p.varDecls,p.funDecls);
 
 		return null;
@@ -31,6 +41,9 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 
 	@Override
 	public Type visitFunDecl(FunDecl p) {
+		// don't need to run the return matcher as a whole pass, just start it off on each funDecl
+		p.accept(new ReturnMatcher());
+
 		p.funType.accept(this);
 		visitAll(p.params);
 		p.block.accept(this);
@@ -105,9 +118,10 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		for (int i = 0; i < fce.args.size(); i++) {
 			Expr arg = fce.args.get(i);
 
-			Type argType = arg.accept(this);
-			Type argDeclType = fce.funDecl.params.get(i).accept(this);
+			Type argType;
+			if((argType = arg.accept(this)) == null) return null;
 
+			Type argDeclType = fce.funDecl.params.get(i).varType;
 			if(!argType.equals(argDeclType)){
 				error("Type mismatch, argument no." + i + "is of type " + argType + " and needs to be of type " + argDeclType);
 				// keep going to check all parameters
@@ -141,7 +155,18 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 				// check the two operands have the same type
 				Type lhs = bo.lhs.accept(this);
 				Type rhs = bo.rhs.accept(this);
-				if(!lhs.equals(rhs)){
+				if((lhs.isPointerType() || rhs.isPointerType()) && (bo.op == Op.ADD || bo.op == Op.SUB)){ // non-standard (coursework didn't specify this) pointer arithmetic
+					Type numericSide = rhs;		
+					Type ptrSide = lhs;
+					if(rhs.isPointerType()){
+						numericSide = lhs;
+						ptrSide = rhs;
+					}  
+					if(numericSide.isArrayType() || numericSide.isPointerType() || numericSide.isStructTypeType()){
+						error("Type mismatch, when adding to a pointer, one side needs to be an int but was:" + numericSide);
+					} 
+					return ptrSide;
+				} else if(!lhs.equals(rhs)){
 					error("Type mismatch in binary operator: "+ bo.op + ". The left hand side was of type:" +lhs + ", while the right hand side was of type: " + rhs);
 					return null;
 				} else {
@@ -246,6 +271,7 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 		// char to int
 
 		Type expType = typecastExpr.castedExpr.accept(this);
+		// char to int
 		if(expType == BaseType.CHAR && typecastExpr.newType == BaseType.INT){
 			return typecastExpr.type = typecastExpr.newType;
 		// array to ptr1
@@ -328,7 +354,10 @@ public class TypeCheckVisitor extends BaseSemanticVisitor<Type> {
 	@Override
 	public Type visitReturn(Return r) {
 		// check the function return type matches the function type
-		Type returnType = r.stmt == null ? BaseType.VOID :r.stmt.accept(this);
+		Type returnType = r.exp == null ? BaseType.VOID :r.exp.accept(this);
+		
+		if(r.fd == null) return null;
+
 		if(r.fd.funType != returnType){
 			// this is different to C but cw asks for it
 			error("Type mismatch, return type:" + returnType + " does not match the function return type");

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import co.uk.maksmozolewski.Main;
 import co.uk.maksmozolewski.ast.*;
 
 public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
@@ -15,6 +16,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 		return null;
 	}
+
 
 	/**
 	 * creates new scope from current scope, sets current scope to it and after executing given function sets the scope back to the original
@@ -37,6 +39,9 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	public Void visitProgram(Program p) {
 		GlobalScope gs = new GlobalScope();
 		currentScope = gs;
+
+
+
         // supply library functions:
         // void print_s(char* s);
         // void print_i(int i);
@@ -44,49 +49,8 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
         // char read_c();
         // int read_i();
         // void* mcmalloc(int size);
-        
-
-		Block emptyBlock = new Block(new LinkedList<VarDecl>(),new LinkedList<Stmt>());
-		
-        List<FunDecl> stlib = new LinkedList<FunDecl>(Arrays.asList(
-            new FunDecl(BaseType.VOID, 
-                "print_s", 
-                new LinkedList<VarDecl>(Arrays.asList(
-                    new VarDecl(new PointerType(BaseType.CHAR), "s"))), 
-                emptyBlock
-            ),
-            new FunDecl(BaseType.VOID,
-                "print_i",
-                new LinkedList<VarDecl>(Arrays.asList(
-                    new VarDecl(BaseType.INT,"i"))
-                ),
-                emptyBlock
-            ),
-            new FunDecl(BaseType.VOID,
-                "print_c",
-                new LinkedList<VarDecl>(Arrays.asList(
-                    new VarDecl(BaseType.CHAR,"c")
-                )),
-                emptyBlock),
-            new FunDecl(BaseType.CHAR,
-                "read_c",
-                new LinkedList<VarDecl>(),
-                emptyBlock),
-            new FunDecl(BaseType.INT,
-                "read_i",
-                new LinkedList<VarDecl>(),
-                emptyBlock),
-            new FunDecl(new PointerType(BaseType.VOID),
-                "mcmalloc",
-                new LinkedList<VarDecl>(Arrays.asList(
-                    new VarDecl(BaseType.INT, "size")
-                    
-                )),
-                emptyBlock)
-		));
-	
-		// this will mean that 
-		visitAll(stlib);
+    
+		visitAll(Main.stlib);
 		currentScope = new FileScope(gs);
 
 	
@@ -146,6 +110,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 		// we look for return statement and assign its fd
 		// that's if one exists
+		//TODO: make sure we recurse down the tree to find all the returns!
 		for (Stmt stmt : p.block.stmnts) {
 			if(stmt instanceof Return){
 				((Return)stmt).fd = p;
@@ -201,9 +166,7 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 	@Override
 	public Void visitBlock(Block b) {
 
-		executeInNewScope(()->{
-			visitAll(b.varDecls,b.stmnts);
-		});
+		visitAll(b.varDecls,b.stmnts);
 
 		return null;
 	}
@@ -362,8 +325,8 @@ public class NameAnalysisVisitor extends BaseSemanticVisitor<Void> {
 
 	@Override
 	public Void visitReturn(Return r) {
-		if(r.stmt != null)
-			r.stmt.accept(this);
+		if(r.exp != null)
+			r.exp.accept(this);
 		return null;
 	}
 

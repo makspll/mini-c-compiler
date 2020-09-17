@@ -731,31 +731,6 @@ public class Parser {
         }
     }
 
-    // private Expr parseArrayAccess(){
-    //     expect(TokenClass.LSBR);
-        
-    //     Expr idx;
-    //     if((idx = parseExp())==null) return null;
-    //     expect(TokenClass.RSBR);
-
-    //     return new ArrayAccessExpr(lhs, idx);
-    // }
-
-
-    // private Expr parseFieldAccess(){
-    //     // terminalExpr "." IDENT
-
-    //     Expr lhs;
-    //     if((lhs = parseTerminalExp()) == null) return null;
-        
-    //     expect(TokenClass.DOT);
-
-    //     Token ident;
-    //     if((ident = expect(TokenClass.IDENTIFIER)) == null) return null;
-
-
-    //     return new FieldAccessExpr(lhs, ident.data);
-    // }
     private Expr parseTerminalExp(){
         switch(currToken.tokenClass){
             case IDENTIFIER:
