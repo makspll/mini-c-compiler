@@ -273,8 +273,8 @@ public class ASTDotPrinter implements ASTVisitor<String> {
     public String visitReturn(Return r) {
         String nodeID = writeNodeLabel("Return",null);
 
-        if(r.stmt != null){
-            writeChildrenGraphs(nodeID, r.stmt.accept(this));
+        if(r.exp != null){
+            writeChildrenGraphs(nodeID, r.exp.accept(this));
         } 
 
         return nodeID;
