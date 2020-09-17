@@ -39,10 +39,10 @@ buildNumber.properties
 
 # project
 /cw-src
-
+*.astdump
+out
+*.txt
 
 # general
 *.swp
-test.txt
-out.txt
 *.png
