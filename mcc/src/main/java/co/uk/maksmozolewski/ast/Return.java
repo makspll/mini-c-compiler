@@ -3,11 +3,11 @@ package co.uk.maksmozolewski.ast;
 public class Return extends Stmt{
 
     public FunDecl fd; // to be filled in by name analyser
-    public final Expr stmt;
+    public final Expr exp;
 
 
     public Return(Expr stmt) {
-        this.stmt = stmt;
+        this.exp = stmt;
     }
 
     @Override
