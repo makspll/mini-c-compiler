@@ -1,4 +1,6 @@
 # Mini-C Compiler
+Blog post: https://maksmozolewski.co.uk/blog/writing-mini-c-compiler-3-weeks/
+
 ## License
 The code is mine, however it was based on the repository given to students taking compiling techniques at UoE 
 (2019-20, no longer running, i did not take it but i did watch the lectures and try and stick to the coursework instructions)
